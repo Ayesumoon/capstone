@@ -61,7 +61,7 @@ input[type="file"] {
 
 /* Submit Button */
 input[type="submit"] {
-    background-color: #ff87d1;
+    background-color: #d387ff;
     color: white;
     border: none;
     padding: 10px;
@@ -72,7 +72,7 @@ input[type="submit"] {
 }
 
 input[type="submit"]:hover {
-    background-color: #be5d99;
+    background-color: #9f5cc5;
 }
 
 /* Back to Products Link */

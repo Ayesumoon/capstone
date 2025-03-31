@@ -80,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
 </head>
-<link rel="stylesheet" href="login.css">
+<link rel="stylesheet" href="css/login.css">
 <body>
 <img src="logo.png" alt="Seven Dwarfs Logo" class="w-50 h-50"/>
 <div class="maincontent">

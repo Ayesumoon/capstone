@@ -6,7 +6,7 @@
     
     // Fetch orders and product names by joining products table using product_id
     $sql = "SELECT o.order_id, o.customer_id, p.product_name AS products, 
-                   o.total_amount, o.order_status_id, o.payment_method, o.created_at
+                   o.total_amount, o.order_status_id, o.payment_method_id, o.created_at
             FROM orders o
             LEFT JOIN products p ON o.product_id = p.product_id"; // Assuming product_id is in orders table
 
@@ -29,7 +29,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="orders.css">
+    <link rel="stylesheet" href="css/orders.css">
     <title>Orders</title>
 </head>
 <body>

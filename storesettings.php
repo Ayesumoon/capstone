@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store Settings</title>
-    <link rel="stylesheet" href="storesettings.css">
+    <link rel="stylesheet" href="css/storesettings.css">
 </head>
 <body>
     <div class="sidebar">
