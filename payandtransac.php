@@ -1,5 +1,6 @@
 <?php
-    session_start();
+session_start();
+require 'conn.php'; // Make sure this connects to your database properly
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -27,21 +28,21 @@
             </ul>
         </nav>
     </div>
+
     <div class="main-content">
         <h1>Payment & Transactions</h1>
         <div class="filters">
-        <select class="date">
-    <option value="">Select Date</option>
-    <?php
-    // Generate options for the last 7 days
-    for ($i = 0; $i < 7; $i++) {
-        $date = date("Y-m-d", strtotime("-$i days")); // Generate past dates
-        echo "<option value='$date'>$date</option>";
-    }
-    ?>
-</select>
-
+            <select class="date">
+                <option value="">Select Date</option>
+                <?php
+                for ($i = 0; $i < 7; $i++) {
+                    $date = date("Y-m-d", strtotime("-$i days"));
+                    echo "<option value='$date'>$date</option>";
+                }
+                ?>
+            </select>
         </div>
+
         <table class="pay-table">
             <thead>
                 <tr>
@@ -56,16 +57,42 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>101</td>
-                    <td>John Doe</td>
-                    <td>Credit Card</td>
-                    <td>$50.00</td>
-                    <td>Completed</td>
-                    <td>2024-03-24 14:30</td>
-                    <td><a href="#">View Details</a></td>
-                </tr>
+                <?php
+                $sql = "
+                    SELECT 
+                        t.transaction_id,
+                        t.order_id,
+                        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+                        pm.payment_method_name,
+                        t.total,
+                        os.order_status_name,
+                        t.date_time
+                    FROM transactions t
+                    LEFT JOIN customers c ON t.customer_id = c.customer_id
+                    LEFT JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
+                    LEFT JOIN order_status os ON t.order_status_id = os.order_status_id
+                    ORDER BY t.date_time DESC
+                ";
+                $result = $conn->query($sql);
+
+                if ($result && $result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        echo "<tr>
+                            <td>{$row['transaction_id']}</td>
+                            <td>{$row['order_id']}</td>
+                            <td>{$row['customer_name']}</td>
+                            <td>{$row['payment_method_name']}</td>
+                            <td>\${$row['total']}</td>
+                            <td>{$row['order_status_name']}</td>
+                            <td>{$row['date_time']}</td>
+                            <td><a href='transaction_details.php?id={$row['transaction_id']}'>View Details</a></td>
+                        </tr>";
+                    }
+                } else {
+                    echo "<tr><td colspan='8'>No transactions found.</td></tr>";
+                }
+                $conn->close();
+                ?>
             </tbody>
         </table>
     </div>
