@@ -41,7 +41,7 @@ body {
 }
 .main-content {
     padding: 20px;
-    width: 100%;
+    width: 95%;
 }
 
 .settings-container {
@@ -70,7 +70,7 @@ body {
 }
 
 .settings-group input, .settings-group select {
-    width: 100%;
+    width: 95%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -83,8 +83,16 @@ body {
     padding: 10px 15px;
     cursor: pointer;
     border-radius: 5px;
+    text-decoration: none; /* Remove underline from anchor link */
 }
 
+/* Hover state for the button */
 .edit-btn:hover, .reset-btn:hover {
-    background: #357abd;
+    background: #357ab7;  /* Darker shade on hover */
+}
+
+/* Focus state for accessibility */
+.edit-btn:focus, .reset-btn:focus {
+    outline: none;
+    background: #357ab7;
 }
