@@ -1,79 +1,158 @@
 <?php
-session_start();
-include 'conn.php'; // Include your database connection file
-
-// Check if user is logged in
-if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
-    exit();
-}
-
-// Query to get the count of new orders
-$new_orders_query = "SELECT COUNT(*) AS new_orders FROM orders WHERE order_status = 'new'";
-$new_orders_result = mysqli_query($conn, $new_orders_query);
-$new_orders_data = mysqli_fetch_assoc($new_orders_result);
-$new_orders_count = $new_orders_data['new_orders'];
-
-// Query to get total sales
-$sales_query = "SELECT SUM(total_amount) AS total_sales FROM orders WHERE order_status = 'completed'";
-$sales_result = mysqli_query($conn, $sales_query);
-$sales_data = mysqli_fetch_assoc($sales_result);
-$total_sales = $sales_data['total_sales'];
-
-// Query to get total revenue
-$revenue_query = "SELECT SUM(amount_paid) AS total_revenue FROM transactions WHERE transaction_status = 'completed'";
-$revenue_result = mysqli_query($conn, $revenue_query);
-$revenue_data = mysqli_fetch_assoc($revenue_result);
-$total_revenue = $revenue_data['total_revenue'];
-
+    session_start();
 ?>
-
-<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <title>Dashboard</title>
-</head>
-<body>
-    <div class="sidebar">
-        <h2>Dashboard</h2>
-        <p>Welcome back, <?php echo isset($_SESSION['username']) ? $_SESSION['username'] : 'User'; ?>!</p>
-        <nav>
-            <ul>
-                <li><a href="dashboard.php"><strong>Dashboard</strong></a></li>
-                <li><a href="products.php">Products</a></li>
-                <li><a href="orders.php">Orders</a></li>
-                <li><a href="customers.php">Customers</a></li>
-                <li><a href="inventory.php">Inventory</a></li>
-                <li><a href="users.php">Users</a></li>
-                <li><a href="payandtransac.php">Payment & Transactions</a></li>
-                <li><a href="storesettings.php">Store Settings</a></li>
-                <li><a href="logout.php">Log out</a></li>
-            </ul>
-        </nav>
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Dashboard
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+ </head>
+ <body class="bg-gray-100">
+  <div class="flex h-screen">
+   <!-- Sidebar -->
+   <div class="w-64 bg-white shadow-md">
+    <div class="p-4">
+     <div class="flex items-center space-x-4">
+      <img alt="User profile picture" class="rounded-full" height="50" src="logo.png" width="50"/>
+      <div>
+       <h2 class="text-lg font-semibold">
+        SevenDwarfs
+       </h2>
+      </div>
+     </div>
+     <div class="mt-4">
+      <div class="flex items-center space-x-4">
+       <img alt="User profile picture" class="rounded-full" height="40" src="ID.jpg" width="40"/>
+       <div>
+        <h3 class="text-sm font-semibold">
+         Aisha Cayago
+        </h3>
+        <p class="text-xs text-gray-500">
+         Admin
+        </p>
+       </div>
+      </div>
+     </div>
     </div>
-    <div class="main-content">
-        <div class="header"><h2>Dashboard</h2></div>
-        <div class="dashboard-cards">
-            <div class="card new-orders">New Orders: <?php echo $new_orders_count; ?></div>
-            <div class="card sales">Sales: $<?php echo number_format($total_sales, 2); ?></div>
-            <div class="card revenue">Revenue: $<?php echo number_format($total_revenue, 2); ?></div>
-        </div>
-        <div class="section">
-            <h3>Recent Orders</h3>
-            <!-- Add code here to display recent orders if needed -->
-        </div>
-        <div class="section">
-            <h3>Activities</h3>
-            <!-- Add code here to display recent activities if needed -->
-        </div>
-    </div>
-</body>
-</html>
+    <nav class="mt-6">
+     <ul>
+     <li class="px-4 py-2 hover:bg-gray-200">
+  <a href="dashboard.php" class="flex items-center space-x-2">
+  <li class="px-4 py-2 bg-pink-100 text-pink-600"><i class="fas fa-tachometer-alt"></i>
+    <span>Dashboard</strong></span>
+  </a>
+</li>
+<li class="px-4 py-2 hover:bg-gray-200">
+  <a href="products.php" class="flex items-center space-x-2">
+    <i class="fas fa-box"></i>
+    <span>Products</span>
+  </a>
+</li>
+<li class="px-4 py-2 hover:bg-gray-200">
+  <a href="orders.php" class="flex items-center space-x-2">
+    <i class="fas fa-shopping-cart"></i>
+    <span>Orders</span>
+  </a>
+</li>
+<li class="px-4 py-2 hover:bg-gray-200">
+  <a href="customers.php" class="flex items-center space-x-2">
+    <i class="fas fa-users"></i>
+    <span>Customers</span>
+  </a>
+</li>
 
-<?php
-// Close the database connection
-mysqli_close($conn);
-?>
+<li class="px-4 py-2 hover:bg-gray-200">
+  <a href="inventory.php" class="flex items-center space-x-2">
+    <i class="fas fa-warehouse"></i>
+    <span>Inventory</span>
+  </a>
+</li>
+
+<li class="px-4 py-2 hover:bg-gray-200">
+  <a href="users.php" class="flex items-center space-x-2">
+    <i class="fas fa-user"></i>
+    <span>Users</span>
+  </a>
+</li>
+
+<li class="px-4 py-2 hover:bg-gray-200">
+  <a href="storesettings.php" class="flex items-center space-x-2">
+    <i class="fas fa-cog"></i>
+    <span>Store Settings</span>
+  </a>
+</li>
+
+<li class="px-4 py-2 hover:bg-gray-200">
+  <a href="logout.php" class="flex items-center space-x-2">
+    <i class="fas fa-sign-out-alt"></i>
+    <span>Log out</span>
+  </a>
+</li>
+
+     </ul>
+    </nav>
+   </div>
+   <!-- Main Content -->
+   <div class="flex-1 flex flex-col">
+    <!-- Header -->
+     
+    <header class="bg-pink-500 p-4 flex items-center justify-between">
+     <div class="flex items-center space-x-4">
+      <button class="text-white text-2xl">
+      <h1 class="text-xl font-bold">Dashboard</h1>
+       </i>
+     </div>
+     <div class="flex items-center space-x-4">
+      <button class="text-white text-xl">
+       <i class="fas fa-envelope">
+       </i>
+      </button>
+      <button class="text-white text-xl">
+       <i class="fas fa-bell">
+       </i>
+      </button>
+     </div>
+    </header>
+    <!-- Dashboard Content -->
+    
+     <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-purple-500 text-white p-4 rou text-center w-30 h-48 flex items-center justify-center">   
+       <h2 class="text-lg font-semibold">
+        New Orders
+       </h2>
+      </div>
+      <div class="bg-green-500 text-white p-4 rounded-md text-center w-30 h-48 flex items-center justify-center">
+       <h2 class="text-lg font-semibold">
+        Sales
+       </h2>
+      </div>
+      <div class="bg-yellow-500 text-white p-4 rounded-md text-center w-30 h-48 flex items-center justify-center">
+       <h2 class="text-lg font-semibold">
+        Revenue
+       </h2>
+      </div>
+     </div>
+     <div class="mt-6">
+      <div class="bg-white p-4 rounded-md shadow-md">
+       <h2 class="text-lg font-semibold">
+        Recent Orders
+       </h2>
+      </div>
+     </div>
+     <div class="mt-6">
+      <div class="bg-white p-4 rounded-md shadow-md">
+       <h2 class="text-lg font-semibold">
+        Activities
+       </h2>
+      </div>
+     </div>
+    </main>
+   </div>
+  </div>
+ </body>
+</html>
