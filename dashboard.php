@@ -80,6 +80,8 @@
   </a>
 </li>
 
+<li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-money-check-alt mr-2"></i><a href="payandtransac.php">Payment & Transactions</a></li>
+
 <li class="px-4 py-2 hover:bg-gray-200">
   <a href="storesettings.php" class="flex items-center space-x-2">
     <i class="fas fa-cog"></i>

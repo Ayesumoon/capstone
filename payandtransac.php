@@ -6,42 +6,63 @@ require 'conn.php'; // Make sure this connects to your database properly
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/payandtransac.css">
     <title>Payment & Transactions</title>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Payment & Transaction</h2>
-        <p>Welcome back, <?php echo isset($_SESSION['username']) ? $_SESSION['username'] : 'User'; ?>!</p>
-        <nav>
-            <ul>
-                <li><a href="dashboard.php">Dashboard</a></li>
-                <li><a href="products.php">Products</a></li>
-                <li><a href="orders.php">Orders</a></li>
-                <li><a href="customers.php">Customers</a></li>
-                <li><a href="inventory.php">Inventory</a></li>
-                <li><a href="users.php">Users</a></li>
-                <li><strong><a href="payandtransac.php">Payment & Transactions</a></strong></li>
-                <li><a href="storesettings.php">Store Settings</a></li>
-                <li><a href="logout.php">Log out</a></li>
-            </ul>
-        </nav>
+</title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+ </head>
+ <body class="bg-gray-100">
+  <div class="flex h-screen">
+   <!-- Sidebar -->
+   <div class="w-64 bg-white shadow-md">
+    <div class="p-4">
+     <div class="flex items-center space-x-4">
+      <img alt="User profile picture" class="rounded-full" height="50" src="logo.png" width="50"/>
+      <div>
+       <h2 class="text-lg font-semibold">
+        SevenDwarfs
+       </h2>
+      </div>
+     </div>
+     <div class="mt-4">
+      <div class="flex items-center space-x-4">
+       <img alt="User profile picture" class="rounded-full" height="40" src="ID.jpg" width="40"/>
+       <div>
+        <h3 class="text-sm font-semibold">
+         Aisha Cayago
+        </h3>
+        <p class="text-xs text-gray-500">
+         Admin
+        </p>
+       </div>
+      </div>
+     </div>
     </div>
-
-    <div class="main-content">
-        <h1>Payment & Transactions</h1>
-        <div class="filters">
-            <select class="date">
-                <option value="">Select Date</option>
-                <?php
-                for ($i = 0; $i < 7; $i++) {
-                    $date = date("Y-m-d", strtotime("-$i days"));
-                    echo "<option value='$date'>$date</option>";
-                }
-                ?>
-            </select>
-        </div>
+    <nav class="mt-6">
+     <ul>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-tachometer-alt mr-2"></i><a href="dashboard.php">Dashboard</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-box mr-2"></i><a href="products.php">Products</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-shopping-cart mr-2"></i><a href="orders.php">Orders</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-users mr-2"></i><a href="customers.php">Customers</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-warehouse mr-2"></i><a href="inventory.php">Inventory</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-user mr-2"></i><a href="users.php">Users</a></li>
+          <li class="px-4 py-2 bg-pink-100 text-pink-600"><i class="fas fa-money-check-alt mr-2"></i><a href="payandtransac.php">Payment & Transactions</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-cog mr-2"></i><a href="storesettings.php">Store Settings</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-sign-out-alt mr-2"></i><a href="log.php">Log out</a></li>
+        </ul>
+      </nav>
+    </div>
+    <!-- Main Content -->
+    <div class="flex-1 p-6">
+      <div class="bg-pink-600 text-white p-4 rounded-t">
+        <h1 class="text-xl font-bold">Store Settings</h1>
+      </div>
+      <div class="bg-white p-6 rounded-b shadow-md space-y-6">
+         
 
         <table class="pay-table">
             <thead>
