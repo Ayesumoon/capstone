@@ -51,37 +51,65 @@ if ($resultProducts->num_rows > 0) {
 $stmt->close();
 $conn->close();
 ?>
-<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/products.css">
-    <title>Products</title>
-</head>
-<body>
-    <div class="sidebar">
-        <h2>Products</h2>
-        <p>Welcome back, <?php echo isset($_SESSION['username']) ? $_SESSION['username'] : 'User'; ?>!</p>
-        <nav>
-            <ul>
-                <li><a href="dashboard.php">Dashboard</a></li>
-                <li><strong><a href="products.php">Products</a></strong></li>
-                <li><a href="orders.php">Orders</a></li>
-                <li><a href="customers.php">Customers</a></li>
-                <li><a href="inventory.php">Inventory</a></li>
-                <li><a href="users.php">Users</a></li>
-                <li><a href="payandtransac.php">Payment & Transactions</a></li>
-                <li><a href="storesettings.php">Store Settings</a></li>
-                <li><a href="logout.php">Log out</a></li>
-            </ul>
-        </nav>
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Products
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+ </head>
+ <body class="bg-gray-100">
+  <div class="flex h-screen">
+   <!-- Sidebar -->
+   <div class="w-64 bg-white shadow-md">
+    <div class="p-4">
+     <div class="flex items-center space-x-4">
+      <img alt="User profile picture" class="rounded-full" height="50" src="logo.png" width="50"/>
+      <div>
+       <h2 class="text-lg font-semibold">
+        SevenDwarfs
+       </h2>
+      </div>
+     </div>
+     <div class="mt-4">
+      <div class="flex items-center space-x-4">
+       <img alt="User profile picture" class="rounded-full" height="40" src="ID.jpg" width="40"/>
+       <div>
+        <h3 class="text-sm font-semibold">
+         Aisha Cayago
+        </h3>
+        <p class="text-xs text-gray-500">
+         Admin
+        </p>
+       </div>
+      </div>
+     </div>
     </div>
-    <div class="main-content">
-        <h2>Products</h2>
-        <br>
-        <button class="button" onclick="location.href='add_product.php'">+ Create New Product</button>
+    <nav class="mt-6">
+     <ul>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-tachometer-alt mr-2"></i><a href="dashboard.php">Dashboard</a></li>
+          <li class="px-4 py-2 bg-pink-100 text-pink-600"><i class="fas fa-box mr-2"></i><a href="products.php">Products</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-shopping-cart mr-2"></i><a href="orders.php">Orders</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-users mr-2"></i><a href="customers.php">Customers</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-warehouse mr-2"></i><a href="inventory.php">Inventory</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-user mr-2"></i><a href="users.php">Users</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-money-check-alt mr-2"></i><a href="payandtransac.php">Payment & Transactions</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-cog mr-2"></i><a href="storesettings.php">Store Settings</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-sign-out-alt mr-2"></i><a href="log.php">Log out</a></li>
+        </ul>
+      </nav>
+    </div>
 
+    <!-- Main Content -->
+    <div class="flex-1 p-6">
+      <div class="bg-pink-600 text-white p-4 rounded-t">
+        <h1 class="text-xl font-bold">Products</h1>
+      </div>
+      <div class="bg-white p-6 rounded-b shadow-md space-y-6">
         <div class="filters">
             <form method="GET" action="products.php">
             <label class="category">Category: 
@@ -98,45 +126,94 @@ $conn->close();
             </form>
         </div>
 
-        <table class="product-table">
-            <thead>
-                <tr>
-                    <th>Product Image</th>
-                    <th>Product Name</th>
-                    <th>Description</th>
-                    <th>Product ID</th>
-                    <th>Price</th>
-                    <th>Category</th>
-                    <th>Stocks</th>
-                    <th>Actions</th>
+        <table class="table-auto w-full border-collapse">
+    <thead>
+        <tr class="bg-gray-100 text-left">
+            <th class="px-4 py-2 border-b">Product Image</th>
+            <th class="px-4 py-2 border-b">Product Name</th>
+            <th class="px-4 py-2 border-b">Description</th>
+            <th class="px-4 py-2 border-b">Product ID</th>
+            <th class="px-4 py-2 border-b">Price</th>
+            <th class="px-4 py-2 border-b">Category</th>
+            <th class="px-4 py-2 border-b">Stocks</th>
+            <th class="px-4 py-2 border-b">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php if (!empty($products)) { 
+            foreach ($products as $product) { ?>
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 border-b"><img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="Product Image" style="width:50px; height:50px;"></td>
+                    <td class="px-4 py-2 border-b"><?php echo htmlspecialchars($product['product_name']); ?></td>
+                    <td class="px-4 py-2 border-b"><?php echo htmlspecialchars($product['description']); ?></td>
+                    <td class="px-4 py-2 border-b"><?php echo $product['product_id']; ?></td>
+                    <td class="px-4 py-2 border-b">₱<?php echo number_format($product['price_id'], 2); ?></td>
+                    <td class="px-4 py-2 border-b"><?php echo htmlspecialchars($product['category_name']); ?></td>
+                    <td class="px-4 py-2 border-b"><?php echo $product['stocks']; ?></td>
+                    <td class="px-4 py-2 border-b">
+                        <a href="edit_product.php?id=<?php echo $product['product_id']; ?>">
+                            <button class="bg-yellow-500 text-white px-4 py-2 rounded">Edit</button>
+                        </a>
+                        <a href="delete_product.php?id=<?php echo $product['product_id']; ?>" onclick="return confirm('Are you sure you want to delete this product?')">
+                            <button class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+                        </a>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($products)) { 
-                    foreach ($products as $product) { ?>
-                        <tr>
-                            <td><img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="Product Image" style="width:50px; height:50px;"></td>
-                            <td><?php echo htmlspecialchars($product['product_name']); ?></td>
-                            <td><?php echo htmlspecialchars($product['description']); ?></td>
-                            <td><?php echo $product['product_id']; ?></td>
-                            <td>₱<?php echo number_format($product['price_id'], 2); ?></td> <!-- Fixed price column -->
-                            <td><?php echo htmlspecialchars($product['category_name']); ?></td>
-                            <td><?php echo $product['stocks']; ?></td>
-                            <td>
-                                <a href="edit_product.php?id=<?php echo $product['product_id']; ?>">
-                                    <button class="edit-button">Edit</button>
-                                </a>
-                                <a href="delete_product.php?id=<?php echo $product['product_id']; ?>" onclick="return confirm('Are you sure you want to delete this product?')">
-                                    <button class="delete-button">Delete</button>
-                                </a>
-                            </td>
-                        </tr>
-                <?php } 
-                } else { ?>
-                    <tr><td colspan="8" style="text-align: center;">No products available</td></tr>
-                <?php } ?>
-            </tbody>
-        </table>
-    </div>
-</body>
-</html>
+        <?php } 
+        } else { ?>
+            <tr><td colspan="8" class="text-center px-4 py-2 border-b">No products available</td></tr>
+        <?php } ?>
+        <!-- Sample Data for Rows -->
+        <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2 border-b"><img src="product_image_1.jpg" alt="Product Image" style="width:50px; height:50px;"></td>
+            <td class="px-4 py-2 border-b">Pink Dress</td>
+            <td class="px-4 py-2 border-b">Size: M - L</td>
+            <td class="px-4 py-2 border-b">1</td>
+            <td class="px-4 py-2 border-b">₱780.00</td>
+            <td class="px-4 py-2 border-b">Dress</td>
+            <td class="px-4 py-2 border-b">20</td>
+            <td class="px-4 py-2 border-b">
+                <a href="edit_product.php?id=1">
+                    <button class="bg-yellow-500 text-white px-4 py-2 rounded">Edit</button>
+                </a>
+                <a href="delete_product.php?id=1" onclick="return confirm('Are you sure you want to delete this product?')">
+                    <button class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+                </a>
+            </td>
+        </tr>
+        <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2 border-b"><img src="product_image_2.jpg" alt="Product Image" style="width:50px; height:50px;"></td>
+            <td class="px-4 py-2 border-b">White Blouse</td>
+            <td class="px-4 py-2 border-b">Size: S - L</td>
+            <td class="px-4 py-2 border-b">2</td>
+            <td class="px-4 py-2 border-b">₱500.00</td>
+            <td class="px-4 py-2 border-b">Blouse</td>
+            <td class="px-4 py-2 border-b">20</td>
+            <td class="px-4 py-2 border-b">
+                <a href="edit_product.php?id=2">
+                    <button class="bg-yellow-500 text-white px-4 py-2 rounded">Edit</button>
+                </a>
+                <a href="delete_product.php?id=2" onclick="return confirm('Are you sure you want to delete this product?')">
+                    <button class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+                </a>
+            </td>
+        </tr>
+        <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2 border-b"><img src="product_image_3.jpg" alt="Product Image" style="width:50px; height:50px;"></td>
+            <td class="px-4 py-2 border-b">Test1</td>
+            <td class="px-4 py-2 border-b">Size: M - L</td>
+            <td class="px-4 py-2 border-b">3</td>
+            <td class="px-4 py-2 border-b">₱200.00</td>
+            <td class="px-4 py-2 border-b">Shoes</td>
+            <td class="px-4 py-2 border-b">30</td>
+            <td class="px-4 py-2 border-b">
+                <a href="edit_product.php?id=3">
+                    <button class="bg-yellow-500 text-white px-4 py-2 rounded">Edit</button>
+                </a>
+                <a href="delete_product.php?id=3" onclick="return confirm('Are you sure you want to delete this product?')">
+                    <button class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+                </a>
+            </td>
+        </tr>
+    </tbody>
+</table>
