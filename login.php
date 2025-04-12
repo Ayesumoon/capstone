@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmtReset->close();
 
 
-            header("Location: customer_home.php"); // Redirect to customer page
+            header("Location: customerside/homepage.php"); // Redirect to customer page
             exit;
         }
     }
