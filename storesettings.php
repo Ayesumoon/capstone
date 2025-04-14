@@ -2,6 +2,30 @@
 session_start();
 include 'conn.php'; // Include your database connection file
 
+$admin_id = $_SESSION['admin_id'] ?? null;
+$admin_name = "Admin";
+$admin_role = "Admin";
+
+if ($admin_id) {
+    $query = "
+        SELECT 
+            CONCAT(first_name, ' ', last_name) AS full_name, 
+            r.role_name 
+        FROM adminusers a
+        LEFT JOIN roles r ON a.role_id = r.role_id
+        WHERE a.admin_id = ?
+    ";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $admin_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        $admin_name = $row['full_name'];
+        $admin_role = $row['role_name'] ?? 'Admin';
+    }
+}
+
 // Check if user is logged in (optional check)
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
@@ -41,13 +65,13 @@ $store_settings = mysqli_fetch_assoc($result); // Fetch the data as an associati
      </div>
      <div class="mt-4">
       <div class="flex items-center space-x-4">
-       <img alt="User profile picture" class="rounded-full" height="40" src="ID.jpg" width="40"/>
+       <img alt="User profile picture" class="rounded-full" height="40" src="newID.jpg" width="40"/>
        <div>
-        <h3 class="text-sm font-semibold">
-         Aisha Cayago
+       <h3 class="text-sm font-semibold">
+        <?php echo htmlspecialchars($admin_name); ?>
         </h3>
         <p class="text-xs text-gray-500">
-         Admin
+        <?php echo htmlspecialchars($admin_role); ?>
         </p>
        </div>
       </div>
@@ -63,7 +87,7 @@ $store_settings = mysqli_fetch_assoc($result); // Fetch the data as an associati
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-user mr-2"></i><a href="users.php">Users</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-money-check-alt mr-2"></i><a href="payandtransac.php">Payment & Transactions</a></li>
           <li class="px-4 py-2 bg-pink-100 text-pink-600"><i class="fas fa-cog mr-2"></i><a href="storesettings.php">Store Settings</a></li>
-          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-sign-out-alt mr-2"></i><a href="log.php">Log out</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-sign-out-alt mr-2"></i><a href="logout.php">Log out</a></li>
         </ul>
       </nav>
     </div>

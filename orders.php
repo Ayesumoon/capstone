@@ -2,6 +2,30 @@
 session_start();
 require 'conn.php'; // Include database connection
 
+$admin_id = $_SESSION['admin_id'] ?? null;
+$admin_name = "Admin";
+$admin_role = "Admin";
+
+if ($admin_id) {
+    $query = "
+        SELECT 
+            CONCAT(first_name, ' ', last_name) AS full_name, 
+            r.role_name 
+        FROM adminusers a
+        LEFT JOIN roles r ON a.role_id = r.role_id
+        WHERE a.admin_id = ?
+    ";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $admin_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        $admin_name = $row['full_name'];
+        $admin_role = $row['role_name'] ?? 'Admin';
+    }
+}
+
 $orders = [];
 
 // Fetch orders and product names by joining products table using product_id
@@ -46,11 +70,15 @@ $conn->close();
                 </div>
                 <div class="mt-4">
                     <div class="flex items-center space-x-4">
-                        <img alt="User profile picture" class="rounded-full" height="40" src="ID.jpg" width="40"/>
+                        <img alt="User profile picture" class="rounded-full" height="40" src="newID.jpg" width="40"/>
                         <div>
-                            <h3 class="text-sm font-semibold">Aisha Cayago</h3>
-                            <p class="text-xs text-gray-500">Admin</p>
-                        </div>
+                        <h3 class="text-sm font-semibold">
+                        <?php echo htmlspecialchars($admin_name); ?>
+                        </h3>
+                        <p class="text-xs text-gray-500">
+                        <?php echo htmlspecialchars($admin_role); ?>
+                        </p>
+                       </div>
                     </div>
                 </div>
             </div>
@@ -64,7 +92,7 @@ $conn->close();
                     <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-user mr-2"></i><a href="users.php">Users</a></li>
                     <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-money-check-alt mr-2"></i><a href="payandtransac.php">Payment & Transactions</a></li>
                     <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-cog mr-2"></i><a href="storesettings.php">Store Settings</a></li>
-                    <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-sign-out-alt mr-2"></i><a href="log.php">Log out</a></li>
+                    <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-sign-out-alt mr-2"></i><a href="logout.php">Log out</a></li>
                 </ul>
             </nav>
         </div>
@@ -72,7 +100,7 @@ $conn->close();
     <!-- Main Content -->
     <div class="flex-1 p-6">
       <div class="bg-pink-600 text-white p-4 rounded-t">
-        <h1 class="text-xl font-bold">Store Settings</h1>
+        <h1 class="text-xl font-bold">Orders</h1>
       </div>
             <br>
             <div class="shadow-md p-4 bg-white rounded-lg">

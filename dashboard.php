@@ -1,6 +1,30 @@
 <?php
 include 'conn.php'; // make sure this connects to your DB
 
+ $admin_id = $_SESSION['admin_id'] ?? null;
+  $admin_name = "Admin";
+  $admin_role = "Admin";
+
+  if ($admin_id) {
+      $query = "
+          SELECT 
+              CONCAT(first_name, ' ', last_name) AS full_name, 
+              r.role_name 
+          FROM adminusers a
+          LEFT JOIN roles r ON a.role_id = r.role_id
+          WHERE a.admin_id = ?
+      ";
+      $stmt = $conn->prepare($query);
+      $stmt->bind_param("i", $admin_id);
+      $stmt->execute();
+      $result = $stmt->get_result();
+
+      if ($row = $result->fetch_assoc()) {
+          $admin_name = $row['full_name'];
+          $admin_role = $row['role_name'] ?? 'Admin';
+      }
+  }
+
 // Get metrics
 $newOrders = $totalSales = $totalRevenue = 0;
 $weeklyOrders = [];
@@ -13,6 +37,25 @@ if ($row = $salesQuery->fetch_assoc()) $totalSales = $row['total_sales'];
 
 $revenueQuery = $conn->query("SELECT SUM(total) AS revenue FROM transactions");
 if ($row = $revenueQuery->fetch_assoc()) $totalRevenue = $row['revenue'];
+
+// Check for notifications
+$newOrdersNotif = 0;
+$lowStockNotif = 0;
+
+// Check for new orders in last day
+$newOrdersResult = $conn->query("SELECT COUNT(*) as count FROM orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)");
+if ($row = $newOrdersResult->fetch_assoc()) {
+    $newOrdersNotif = $row['count'];
+}
+
+// Check for low stock products (adjust threshold as needed)
+$lowStockResult = $conn->query("SELECT COUNT(*) as count FROM products WHERE stocks< 30"); // Example: less than 10
+if ($row = $lowStockResult->fetch_assoc()) {
+    $lowStockNotif = $row['count'];
+}
+
+$totalNotif = $newOrdersNotif + $lowStockNotif;
+
 
 // Get recent orders
 $recentOrders = $conn->query("SELECT o.order_id, o.total_amount, o.created_at,CONCAT(c.first_name, ' ', c.last_name) AS customer_name 
@@ -60,13 +103,13 @@ while ($row = $chartQuery->fetch_assoc()) {
      </div>
      <div class="mt-4">
       <div class="flex items-center space-x-4">
-       <img alt="User profile picture" class="rounded-full" height="40" src="ID.jpg" width="40"/>
+       <img alt="User profile picture" class="rounded-full" height="40" src="newID.jpg" width="40"/>
        <div>
         <h3 class="text-sm font-semibold">
-         Aisha Cayago
+        <?php echo htmlspecialchars($admin_name); ?>
         </h3>
         <p class="text-xs text-gray-500">
-         Admin
+        <?php echo htmlspecialchars($admin_role); ?>
         </p>
        </div>
       </div>
@@ -147,10 +190,30 @@ while ($row = $chartQuery->fetch_assoc()) {
        <i class="fas fa-envelope">
        </i>
       </button>
-      <button class="text-white text-xl">
-       <i class="fas fa-bell">
-       </i>
-      </button>
+      <div class="relative">
+  <button class="text-white text-xl focus:outline-none" onclick="toggleNotifDropdown()">
+    <i class="fas fa-bell"></i>
+    <?php if ($totalNotif > 0): ?>
+    <span class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-1.5"><?= $totalNotif ?></span>
+    <?php endif; ?>
+  </button>
+
+  <!-- Dropdown -->
+  <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50">
+    <ul class="divide-y divide-gray-200">
+      <?php if ($newOrdersNotif > 0): ?>
+      <li class="px-4 py-2 hover:bg-gray-100 text-sm">🛒 <?= $newOrdersNotif ?> new order(s)</li>
+      <?php endif; ?>
+      <?php if ($lowStockNotif > 0): ?>
+      <li class="px-4 py-2 hover:bg-gray-100 text-sm">📦 <?= $lowStockNotif ?> low stock item(s)</li>
+      <?php endif; ?>
+      <?php if ($totalNotif === 0): ?>
+      <li class="px-4 py-2 text-gray-500 text-sm">No notifications</li>
+      <?php endif; ?>
+    </ul>
+  </div>
+</div>
+
      </div>
     </header>
     <!-- Dashboard Content -->
@@ -239,5 +302,21 @@ while ($row = $chartQuery->fetch_assoc()) {
         }
     });
 </script>
+<script>
+  function toggleNotifDropdown() {
+    const dropdown = document.getElementById('notifDropdown');
+    dropdown.classList.toggle('hidden');
+  }
+
+  // Optional: Close when clicking outside
+  window.addEventListener('click', function(e) {
+    const notifBtn = document.querySelector('.fa-bell');
+    const dropdown = document.getElementById('notifDropdown');
+    if (!notifBtn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+</script>
+
  </body>
 </html>
