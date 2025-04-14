@@ -155,7 +155,6 @@
         <th class="px-4 py-3 border text-left">Stocks</th>
         <th class="px-4 py-3 border text-left">Price</th>
         <th class="px-4 py-3 border text-left">Status</th>
-        <th class="px-4 py-3 border text-left">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -175,10 +174,6 @@
                    (($status === 'Low Stock') ? 'text-yellow-600' : 'text-red-600'); ?>">
             <?php echo $status; ?>
           </td>
-          <td class="px-4 py-2 border">
-            <a href="#" class="text-blue-500 hover:underline font-medium">Restock</a>
-          </td>
-        </tr>
       <?php } 
       } else { ?>
         <tr>

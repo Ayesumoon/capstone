@@ -14,10 +14,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "INSERT INTO customers (first_name, last_name, email, phone, password_hash, address, status_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssssssi", $first_name, $last_name, $email, $phone, $password, $address, $status_id);
-    
     if ($stmt->execute()) {
-        echo "Registration successful. <a href='login.php'>Login here</a>";
-    } else {
+        header("Location: login.php");
+        exit();
+    }
+     else {
         echo "Error: " . $stmt->error;
     }
 
@@ -60,10 +61,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             <label>Address:</label>
             <textarea name="address" required></textarea>
-
-            <a href="login.php" class="loginbtn">Log In</a>
             
             <input type="submit" value="Sign Up">
+
+            <a href="login.php" class="loginbtn">Log In Here</a>
             
         </form>
     </div>

@@ -124,7 +124,6 @@
         <table class="min-w-full table-auto border border-gray-200 shadow-md text-sm bg-white">
           <thead class="bg-gray-100 text-left text-gray-600">
             <tr>
-              <th class="px-4 py-3 border"><i class="fas fa-trash-alt"></i></th>
               <th class="px-4 py-3 border">Customer ID</th>
               <th class="px-4 py-3 border">Name</th>
               <th class="px-4 py-3 border">Email</th>
@@ -138,7 +137,6 @@
             <?php if (!empty($customers)) { 
               foreach ($customers as $customer) { ?>
               <tr class="hover:bg-gray-50">
-                <td class="px-4 py-2 border"><input type="checkbox" /></td>
                 <td class="px-4 py-2 border"><?php echo $customer['customer_id']; ?></td>
                 <td class="px-4 py-2 border"><?php echo htmlspecialchars($customer['name']); ?></td>
                 <td class="px-4 py-2 border"><?php echo htmlspecialchars($customer['email']); ?></td>

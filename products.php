@@ -183,14 +183,17 @@ $conn->close();
             <td class="px-4 py-3 border"><?php echo htmlspecialchars($product['category_name']); ?></td>
             <td class="px-4 py-3 border text-center"><?php echo $product['stocks']; ?></td>
             <td class="px-4 py-3 border">
-              <div class="flex gap-2">
-                <a href="edit_product.php?id=<?php echo $product['product_id']; ?>" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">
-                  Edit
-                </a>
-                <a href="delete_product.php?id=<?php echo $product['product_id']; ?>" onclick="return confirm('Are you sure you want to delete this product?')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                  Delete
-                </a>
-              </div>
+            <div class="flex justify-center mt-4">
+  <div class="flex gap-2">
+    <a href="edit_product.php?id=<?php echo $product['product_id']; ?>" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm">
+      Edit
+    </a>
+    <a href="delete_product.php?id=<?php echo $product['product_id']; ?>" onclick="return confirm('Are you sure you want to delete this product?')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm">
+      Delete
+    </a>
+  </div>
+</div>
+
             </td>
           </tr>
       <?php } 

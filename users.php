@@ -156,7 +156,6 @@ $conn->close();
           <table class="min-w-full table-auto border border-gray-200 shadow-md text-sm">
             <thead class="bg-gray-100 text-left text-gray-600">
               <tr>
-                <th class="px-4 py-3 border"><i class="fas fa-trash-alt"></i></th>
                 <th class="px-4 py-3 border">User ID</th>
                 <th class="px-4 py-3 border">Username</th>
                 <th class="px-4 py-3 border">Full Name</th>
@@ -172,7 +171,7 @@ $conn->close();
               <?php if (!empty($users)) { 
                 foreach ($users as $user) { ?>
                 <tr class="hover:bg-gray-50">
-                  <td class="px-4 py-2 border"><input type="checkbox" /></td>
+                
                   <td class="px-4 py-2 border"><?php echo $user['admin_id']; ?></td>
                   <td class="px-4 py-2 border"><?php echo htmlspecialchars($user['username']); ?></td>
                   <td class="px-4 py-2 border"><?php echo htmlspecialchars($user['full_name']); ?></td>

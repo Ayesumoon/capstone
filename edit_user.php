@@ -111,59 +111,97 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $conn->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit User</title>
-    <link rel="stylesheet" href="css/edit_user.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h2>Edit User</h2>
-        <?php if (isset($_SESSION['message'])) { 
-            echo "<p style='color: red;'>" . $_SESSION['message'] . "</p>"; 
-            unset($_SESSION['message']);
-        } ?>
-        <form action="edit_user.php?id=<?php echo $admin_id; ?>" method="POST">
-            <label>Username:</label>
-            <input type="text" name="username" value="<?php echo htmlspecialchars($user['username']); ?>">
+<body class="bg-gray-100 min-h-screen p-6">
 
-            <label>First Name:</label>
-            <input type="text" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>">
-            
-            <label>Last Name:</label> 
-            <input type="text" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold text-pink-600 mb-4">Edit User</h2>
 
-            <label>Email:</label>
-            <input type="email" name="admin_email" value="<?php echo htmlspecialchars($user['admin_email']); ?>">
+        <?php if (isset($_SESSION['message'])) { ?>
+            <div class="mb-4 text-red-600 font-medium">
+                <?php 
+                    echo $_SESSION['message']; 
+                    unset($_SESSION['message']);
+                ?>
+            </div>
+        <?php } ?>
 
-            <label>New Password:</label>
-            <input type="password" name="new_password">
+        <form action="edit_user.php?id=<?php echo $admin_id; ?>" method="POST" class="space-y-4">
 
-            <label>Confirm Password:</label>
-            <input type="password" name="confirm_password">
-            
-            <label>Role:</label>
-            <select name="role_id">
-                <?php foreach ($roles as $role) { ?>
-                    <option value="<?php echo $role['role_id']; ?>" <?php echo ($user['role_id'] == $role['role_id']) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($role['role_name']); ?>
-                    </option>
-                <?php } ?>
-            </select>
-            
-            <label>Status:</label>
-            <select name="status_id">
-                <option value="1" <?php echo ($user['status_id'] == 1) ? 'selected' : ''; ?>>Active</option>
-                <option value="2" <?php echo ($user['status_id'] == 2) ? 'selected' : ''; ?>>Inactive</option>
-            </select>
-            
-            <button type="submit">Update User</button>
-            <button type="button" onclick="window.location.href='users.php'">Cancel</button>
+            <div>
+                <label class="block font-medium text-gray-700">Username:</label>
+                <input type="text" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" 
+                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700">First Name:</label>
+                <input type="text" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" 
+                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700">Last Name:</label>
+                <input type="text" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" 
+                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700">Email:</label>
+                <input type="email" name="admin_email" value="<?php echo htmlspecialchars($user['admin_email']); ?>" 
+                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700">New Password:</label>
+                <input type="password" name="new_password" 
+                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700">Confirm Password:</label>
+                <input type="password" name="confirm_password" 
+                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700">Role:</label>
+                <select name="role_id" 
+                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <?php foreach ($roles as $role) { ?>
+                        <option value="<?php echo $role['role_id']; ?>" 
+                            <?php echo ($user['role_id'] == $role['role_id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($role['role_name']); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700">Status:</label>
+                <select name="status_id" 
+                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <option value="1" <?php echo ($user['status_id'] == 1) ? 'selected' : ''; ?>>Active</option>
+                    <option value="2" <?php echo ($user['status_id'] == 2) ? 'selected' : ''; ?>>Inactive</option>
+                </select>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <button type="submit"
+                    class="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600 transition-all">Update User</button>
+                <button type="button" onclick="window.location.href='users.php'"
+                    class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition-all">Cancel</button>
+            </div>
+
         </form>
     </div>
+
 </body>
 </html>
