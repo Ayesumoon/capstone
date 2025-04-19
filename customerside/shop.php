@@ -48,7 +48,6 @@ if ($searchQuery) {
 
 
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,17 +57,14 @@ if ($searchQuery) {
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="bg-pink-50 text-gray-800">
+<body class="bg-pink-50 text-gray-800" x-data="{ showLogin: false, showSignup: false }" @keydown.escape.window="showLogin = false; showSignup = false">
 
 <!-- Navbar -->
 <nav class="bg-pink-100 shadow-md">
   <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
-    
     <!-- Left: Logo + Search -->
     <div class="flex flex-1 items-center gap-4">
       <h1 class="text-2xl font-bold text-pink-600 whitespace-nowrap">Seven Dwarfs Boutique</h1>
-      
-      <!-- Search Bar -->
       <form action="shop.php" method="get" class="flex flex-1 max-w-sm">
         <input type="text" name="search" placeholder="Search products..." 
                class="w-full px-3 py-2 border border-pink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm">
@@ -85,65 +81,56 @@ if ($searchQuery) {
 
     <!-- Right: Icons -->
     <div class="flex items-center gap-4 text-pink-600">
-
       <!-- Cart Icon -->
       <a href="cart.php" class="hover:text-pink-500" title="Cart">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" 
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 6h11.1a1 1 0 001-.8l1.4-5.2H7zm0 0l-1-4H4" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 6h11.1a1 1 0 001-.8l1.4-5.2H7zm0 0l-1-4H4" />
         </svg>
       </a>
 
-      <!-- Profile Icon with Dropdown -->
-<div class="relative" x-data="{ open: false }">
-  <button @click="open = !open" class="hover:text-pink-500" title="Profile">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" 
-            d="M5.121 17.804A4 4 0 0112 14a4 4 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  </button>
-
-  <!-- Dropdown Menu -->
-  <div x-show="open" @click.away="open = false" x-transition
-       class="absolute right-0 mt-2 w-40 bg-white border border-pink-200 rounded-md shadow-lg z-50">
-    <a href="login.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50">Login</a>
-    <a href="signup.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50">Sign Up</a>
-  </div>
-</div>
-
-
+      <!-- Profile Icon opens login modal directly -->
+      <div class="relative">
+        <button @click="showLogin = true" class="hover:text-pink-500" title="Profile">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A4 4 0 0112 14a4 4 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </nav>
-<!-- Login/Signup Modals -->
-<div x-data="{ showLogin: false, showSignup: false }" @keydown.escape.window="showLogin = false; showSignup = false">
-  <!-- Login Modal -->
-  <div x-show="showLogin" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 w-96 shadow-lg" @click.outside="showLogin = false">
-      <h2 class="text-xl font-bold text-pink-600 mb-4">Login</h2>
-      <form>
-        <input type="email" placeholder="Email" class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
-        <input type="password" placeholder="Password" class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
-        <button class="w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition">Log In</button>
-      </form>
-    </div>
-  </div>
 
-  <!-- Signup Modal -->
-  <div x-show="showSignup" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 w-96 shadow-lg" @click.outside="showSignup = false">
-      <h2 class="text-xl font-bold text-pink-600 mb-4">Sign Up</h2>
-      <form>
-        <input type="text" placeholder="Full Name" class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
-        <input type="email" placeholder="Email" class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
-        <input type="password" placeholder="Password" class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
-        <button class="w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition">Sign Up</button>
-      </form>
-    </div>
+<!-- Login Modal -->
+<div x-show="showLogin" x-transition class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md">
+    <h2 class="text-lg font-semibold mb-4 text-pink-600">Login</h2>
+    <form action="login_handler.php" method="POST">
+      <input type="email" name="email" placeholder="Email" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="password" name="password" placeholder="Password" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition">Log In</button>
+    </form>
+    <p class="text-sm text-center mt-4">
+      Don't have an account? 
+      <button @click="showLogin = false; showSignup = true" class="text-pink-600 hover:underline">Sign up here</button>
+    </p>
   </div>
 </div>
 
-
+<!-- Signup Modal -->
+<div x-show="showSignup" x-transition class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md">
+    <h2 class="text-lg font-semibold mb-4 text-pink-600">Sign Up</h2>
+    <form action="signup_handler.php" method="POST">
+      <input type="text" name="first_name" placeholder="First Name" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="text" name="last_name" placeholder="Last Name" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="email" name="email" placeholder="Email" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="text" name="phone" placeholder="Phone" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="text" name="address" placeholder="Address" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="password" name="password" placeholder="Password" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition">Sign Up</button>
+    </form>
+  </div>
+</div>
 <!-- Banner -->
 <section class="bg-pink-200 text-center py-16">
   <h2 class="text-4xl font-bold text-pink-800">Shop All Products</h2>
@@ -218,7 +205,6 @@ if ($searchQuery) {
       <?php endif; ?>
     </div>
   </div>
-
 </section>
 
 <!-- Footer -->
@@ -228,5 +214,6 @@ if ($searchQuery) {
 
 </body>
 </html>
+
 
 <?php $conn->close(); ?>
