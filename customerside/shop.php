@@ -102,7 +102,8 @@ if ($searchQuery) {
 
 <!-- Login Modal -->
 <div x-show="showLogin" x-transition class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-  <div class="bg-white rounded-lg p-6 w-full max-w-md">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md relative">
+    <button @click="showLogin = false" class="absolute top-3 right-3 text-gray-400 hover:text-pink-500 text-lg font-bold">&times;</button>
     <h2 class="text-lg font-semibold mb-4 text-pink-600">Login</h2>
     <form action="login_handler.php" method="POST">
       <input type="email" name="email" placeholder="Email" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
@@ -118,19 +119,30 @@ if ($searchQuery) {
 
 <!-- Signup Modal -->
 <div x-show="showSignup" x-transition class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-  <div class="bg-white rounded-lg p-6 w-full max-w-md">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md relative" x-data="{ password: '', confirmPassword: '', mismatch: false }">
+    <button @click="showSignup = false" class="absolute top-3 right-3 text-gray-400 hover:text-pink-500 text-lg font-bold">&times;</button>
     <h2 class="text-lg font-semibold mb-4 text-pink-600">Sign Up</h2>
-    <form action="signup_handler.php" method="POST">
+    <form action="signup_handler.php" method="POST" @submit.prevent="mismatch = password !== confirmPassword; if (!mismatch) $el.submit();">
       <input type="text" name="first_name" placeholder="First Name" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
       <input type="text" name="last_name" placeholder="Last Name" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
       <input type="email" name="email" placeholder="Email" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
       <input type="text" name="phone" placeholder="Phone" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
       <input type="text" name="address" placeholder="Address" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
-      <input type="password" name="password" placeholder="Password" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      
+      <!-- Password Fields -->
+      <input type="password" name="password" placeholder="Password" x-model="password" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="password" placeholder="Confirm Password" x-model="confirmPassword" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+
+      <!-- Mismatch Warning -->
+      <template x-if="mismatch">
+        <p class="text-red-500 text-sm mb-3">Passwords do not match.</p>
+      </template>
+
       <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition">Sign Up</button>
     </form>
   </div>
 </div>
+
 <!-- Banner -->
 <section class="bg-pink-200 text-center py-16">
   <h2 class="text-4xl font-bold text-pink-800">Shop All Products</h2>
