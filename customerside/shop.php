@@ -1,12 +1,34 @@
 <?php
+session_start();
+
+// Connect to database
 $conn = new mysqli("localhost", "root", "", "dbms");
 if ($conn->connect_error) {
   die("Connection failed: " . $conn->connect_error);
 }
 
-// Get category and sort filter from query string
+// 🔥 Handle profile picture (avatar) logic
+$avatar = 'assets/default-avatar.png'; // default avatar
+if (isset($_SESSION['customer_id'])) {
+  $customer_id = $_SESSION['customer_id'];
+
+  $stmt = $conn->prepare("SELECT profile_picture FROM customers WHERE customer_id = ?");
+  $stmt->bind_param("i", $customer_id);
+  $stmt->execute();
+  $resultProfile = $stmt->get_result();
+  $customer = $resultProfile->fetch_assoc();
+
+  if (!empty($customer['profile_picture'])) {
+    $avatar = 'uploads/profiles/' . htmlspecialchars($customer['profile_picture']);
+  }
+}
+
+// ✅ Now continue to build product shop query
+
+// Get category, sort, and search filters from query string
 $selectedCategory = isset($_GET['category']) ? $_GET['category'] : null;
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'latest';
+$searchQuery = isset($_GET['search']) ? $_GET['search'] : null;
 
 // Base SQL
 $sql = "SELECT p.product_name, p.description, p.price_id AS price, p.image_url, c.category_name
@@ -17,6 +39,11 @@ $sql = "SELECT p.product_name, p.description, p.price_id AS price, p.image_url, 
 // Add category filter if selected
 if ($selectedCategory) {
   $sql .= " AND c.category_name = '" . $conn->real_escape_string($selectedCategory) . "'";
+}
+
+// Add search filter if provided
+if ($searchQuery) {
+  $sql .= " AND p.product_name LIKE '%" . $conn->real_escape_string($searchQuery) . "%'";
 }
 
 // Add sorting logic
@@ -31,7 +58,7 @@ switch ($sort) {
     $sql .= " ORDER BY p.product_id DESC"; // latest
 }
 
-// ✅ Execute the query
+// ✅ Execute the query AFTER building the full SQL
 $result = $conn->query($sql);
 if (!$result) {
   die("Query failed: " . $conn->error);
@@ -40,14 +67,8 @@ if (!$result) {
 // Define category list for sidebar
 $categories = ['Blouse', 'Dress', 'Shorts', 'Skirt', 'Trouser', 'Pants', 'Coordinates', 'Shoes', 'Perfume'];
 
-$searchQuery = isset($_GET['search']) ? $_GET['search'] : null;
-
-if ($searchQuery) {
-  $sql .= " AND p.product_name LIKE '%" . $conn->real_escape_string($searchQuery) . "%'";
-}
-
-
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -75,8 +96,7 @@ if ($searchQuery) {
     <ul class="flex flex-wrap justify-center space-x-4 text-sm md:text-base">
       <li><a href="homepage.php" class="hover:text-pink-500">Home</a></li>
       <li><a href="shop.php" class="hover:text-pink-500 font-semibold">Shop</a></li>
-      <li><a href="about.php" class="hover:text-pink-500">About</a></li>
-      <li><a href="contact.php" class="hover:text-pink-500">Contact</a></li>
+
     </ul>
 
     <!-- Right: Icons -->
@@ -153,7 +173,7 @@ if ($searchQuery) {
 
 <!-- Main Content -->
 <section class="max-w-7xl mx-auto px-4 py-12 flex gap-10">
-  
+
   <!-- Sidebar -->
   <aside class="w-64 bg-white rounded-xl shadow-md p-6" x-data="{ open: true }">
     <h3 class="text-lg font-bold mb-4 text-pink-700">Filters</h3>
@@ -202,25 +222,31 @@ if ($searchQuery) {
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-      <?php if ($result->num_rows > 0): ?>
-        <?php while($row = $result->fetch_assoc()): ?>
-          <div class="bg-white rounded-xl shadow-md p-4">
-            <img src="<?= htmlspecialchars($row['image_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="rounded-md mb-4 w-full h-48 object-cover">
-            <h4 class="text-xl font-semibold text-pink-800"><?= htmlspecialchars($row['product_name']) ?></h4>
-            <p class="text-sm text-gray-600"><?= htmlspecialchars($row['description']) ?></p>
-            <p class="text-pink-600 mt-2 font-semibold">₱<?= number_format($row['price'], 2) ?></p>
-            <button class="mt-4 w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition">Add to Cart</button>
-          </div>
-        <?php endwhile; ?>
-      <?php else: ?>
-        <p class="text-center text-gray-500 col-span-1 sm:col-span-2 md:col-span-3">No products found for this category.</p>
-      <?php endif; ?>
-    </div>
+  <?php if ($result->num_rows > 0): ?>
+    <?php while($row = $result->fetch_assoc()): ?>
+      <div class="bg-white rounded-xl shadow-md p-4 transform transition-transform duration-300 hover:scale-105 hover:-translate-y-2 hover:shadow-lg">
+        <?php 
+          $imageName = htmlspecialchars($row['image_url']);
+          $imagePath = !empty($imageName) ? 'uploads/' . $imageName : 'uploads/default.jpg';
+        ?>
+        <img src="<?= $imagePath ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="rounded-md mb-4 w-full h-48 object-cover">
+        <h4 class="text-xl font-semibold text-pink-800"><?= htmlspecialchars($row['product_name']) ?></h4>
+        <p class="text-sm text-gray-600"><?= htmlspecialchars($row['description']) ?></p>
+        <p class="text-pink-600 mt-2 font-semibold">₱<?= number_format($row['price'], 2) ?></p>
+        <button class="mt-4 w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition">Add to Cart</button>
+      </div>
+    <?php endwhile; ?>
+  <?php else: ?>
+    <p class="text-center text-gray-500 col-span-1 sm:col-span-2 md:col-span-3">No products found for this category.</p>
+  <?php endif; ?>
+</div>
+
   </div>
-</section>
+
+</section> <!-- ✅ Close main content section properly -->
 
 <!-- Footer -->
-<footer class="bg-pink-100 text-center py-6">
+<footer class="bg-pink-100 text-center py-6 mt-12">
   <p class="text-pink-700">&copy; 2025 Seven Dwarfs Boutique. All rights reserved.</p>
 </footer>
 
