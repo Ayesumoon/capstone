@@ -84,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
 <img src="logo.png" alt="Seven Dwarfs Logo" class="w-50 h-50"/>
 <div class="maincontent">
-    <h2>Login</h2>
+    <h2>Admin Login</h2>
     <?php if (!empty($error)) echo "<p style='color:red;'>$error</p>"; ?>
     <form method="post">
         <label>Email:</label>
@@ -96,8 +96,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <br>
         <input type="submit" value="Login">
     </form>
-    <a href="signup.php">
-        <input type="submit" value="Sign Up">
     </a>
 </body>
 </html>
