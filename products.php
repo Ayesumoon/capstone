@@ -72,6 +72,28 @@ if ($resultProducts->num_rows > 0) {
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'add_category') {
+  require 'conn.php';
+  $name = trim($_POST['category_name']);
+
+  if ($name !== '') {
+      $stmt = $conn->prepare("INSERT INTO categories (category_name) VALUES (?)");
+      $stmt->bind_param("s", $name);
+      if ($stmt->execute()) {
+          $newId = $stmt->insert_id;
+          echo json_encode(['success' => true, 'category_id' => $newId, 'category_name' => $name]);
+      } else {
+          echo json_encode(['success' => false, 'message' => 'DB insert failed']);
+      }
+      $stmt->close();
+  } else {
+      echo json_encode(['success' => false, 'message' => 'Empty category name']);
+  }
+  $conn->close();
+  exit;
+}
+
+
 $stmt->close();
 $conn->close();
 ?>
@@ -134,33 +156,80 @@ $conn->close();
         <h1 class="text-xl font-bold">Products</h1>
       </div>
       <div class="bg-white p-6 rounded-b shadow-md space-y-6">
-        <div class="filters">
-            <form method="GET" action="products.php">
-            <label class="border rounded-md p-2">Category: 
-    <select name="category" onchange="this.form.submit()">
+      <div class="filters flex items-center gap-4">
+  <!-- Category Dropdown -->
+  <form method="GET" action="products.php" id="categoryForm" class="flex items-center">
+    <label class="border rounded-md p-2 flex items-center gap-2">Category: 
+      <select name="category" onchange="document.getElementById('categoryForm').submit()" class="p-1 border rounded">
         <option value="all">All</option>
         <?php foreach ($categories as $category) { ?>
-            <option value="<?php echo $category['category_id']; ?>" 
-                <?php echo ($selectedCategory == $category['category_id']) ? 'selected' : ''; ?>>
-                <?php echo $category['category_name']; ?>
-            </option>
+          <option value="<?php echo $category['category_id']; ?>" 
+            <?php echo ($selectedCategory == $category['category_id']) ? 'selected' : ''; ?>>
+            <?php echo $category['category_name']; ?>
+          </option>
         <?php } ?>
-    </select>
-</label>
-            </form>
-            <a href="add_product.php">
-    <button class="bg-pink-600 text-white px-4 py-2 rounded shadow hover:bg-pink-700">
-      <i class="fas fa-plus mr-2"></i>Add Product
-    </button>
-  </a>
+      </select>
+    </label>
+  </form>
+
+  <div class="flex gap-2 items-center">
+  <input type="text" id="newCategoryName" placeholder="New Category" required class="border p-2 rounded">
+  <button onclick="addCategory()" class="bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700">
+    <i class="fas fa-plus mr-1"></i>Category
+  </button>
 </div>
+
+<script>
+  function addCategory() {
+    const name = document.getElementById('newCategoryName').value.trim();
+    if (!name) return;
+
+    fetch('products.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'action=add_category&category_name=' + encodeURIComponent(name),
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const dropdown = document.querySelector('select[name="category"]');
+        const newOption = document.createElement('option');
+        newOption.value = data.category_id;
+        newOption.text = data.category_name;
+        dropdown.appendChild(newOption);
+        dropdown.value = data.category_id;
+        dropdown.dispatchEvent(new Event('change'));
+        document.getElementById('newCategoryName').value = '';
+      } else {
+        alert(data.message || 'Failed to add category.');
+      }
+    })
+    .catch(err => alert('Error adding category.'));
+  }
+</script>
+
+
+  <!-- Conditionally Show Add Product Button -->
+  <?php if ($selectedCategory !== 'all') { ?>
+    <a href="add_product.php?category_id=<?php echo $selectedCategory; ?>">
+      <button class="bg-pink-600 text-white px-4 py-2 rounded shadow hover:bg-pink-700">
+        <i class="fas fa-plus mr-2"></i>Add Product
+      </button>
+    </a>
+  <?php } ?>
+</div>
+
+
+
         </div>
         <div class="overflow-x-auto">
   <table class="min-w-full bg-white border border-gray-200 shadow rounded-lg">
     <thead class="bg-gray-100 text-gray-700">
       <tr>
         <th class="px-4 py-3 border">Product Image</th>
-        <th class="px-4 py-3 border">Product Name</th>
+        <th class="px-4 py-3 border">Product Code</th>
         <th class="px-4 py-3 border">Description</th>
         <th class="px-4 py-3 border">Product ID</th>
         <th class="px-4 py-3 border">Price</th>

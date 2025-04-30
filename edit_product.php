@@ -29,6 +29,10 @@ $stmt->close();
 $category_query = "SELECT category_id, category_name FROM categories";
 $category_result = $conn->query($category_query);
 
+// Fetch suppliers with ID and name
+$supplier_query = "SELECT supplier_id, supplier_name FROM suppliers";
+$supplier_result = $conn->query($supplier_query);
+
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $product_name = trim($_POST['product_name']);
@@ -36,9 +40,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $price = floatval($_POST['price']);
     $category_id = intval($_POST['category']);
     $stocks = intval($_POST['stocks']);
-    
+    $supplier_id = intval($_POST['supplier']); // Now using supplier ID
+
     // Image handling
-    $image_url = $product['image_url']; // Keep the existing image by default
+    $image_url = $product['image_url']; // Keep existing image by default
     if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
         $target_dir = "uploads/";
         if (!is_dir($target_dir)) {
@@ -58,10 +63,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update product details
-    $update_sql = "UPDATE products SET product_name=?, description=?, price_id=?, category_id=?, stocks=?, image_url=? WHERE product_id=?";
+    $update_sql = "UPDATE products SET product_name=?, description=?, price_id=?, category_id=?, stocks=?, image_url=?, supplier_id=? WHERE product_id=?";
     $stmt = $conn->prepare($update_sql);
     if ($stmt) {
-        $stmt->bind_param("ssdissi", $product_name, $description, $price, $category_id, $stocks, $image_url, $product_id);
+        $stmt->bind_param("ssdissii", $product_name, $description, $price, $category_id, $stocks, $image_url, $supplier_name, $product_id);
         if ($stmt->execute()) {
             echo "<script>alert('Product updated successfully!'); window.location.href='products.php';</script>";
         } else {
@@ -131,6 +136,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <input type="number" name="stocks" required
                     value="<?php echo $product['stocks']; ?>"
                     class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700">Supplier:</label>
+                <select name="supplier" required
+                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <option value="">Select Supplier</option>
+                    <?php
+                    if ($supplier_result->num_rows > 0) {
+                        while ($row = $supplier_result->fetch_assoc()) {
+                            $selected = ($product['supplier_id'] == $row['supplier_id']) ? "selected" : "";
+                            echo "<option value='" . $row['supplier_id'] . "' $selected>" . htmlspecialchars($row['supplier_name']) . "</option>";
+                        }
+                    } else {
+                        echo "<option value=''>No suppliers available</option>";
+                    }
+                    ?>
+                </select>
             </div>
 
             <div>
