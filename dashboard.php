@@ -1,73 +1,71 @@
 <?php
-include 'conn.php'; // make sure this connects to your DB
+include 'conn.php';
+$admin_id = $_SESSION['admin_id'] ?? null;
+$admin_name = "Admin";
+$admin_role = "Admin";
 
- $admin_id = $_SESSION['admin_id'] ?? null;
-  $admin_name = "Admin";
-  $admin_role = "Admin";
+if ($admin_id) {
+    $query = "
+        SELECT CONCAT(first_name, ' ', last_name) AS full_name, r.role_name 
+        FROM adminusers a
+        LEFT JOIN roles r ON a.role_id = r.role_id
+        WHERE a.admin_id = ?
+    ";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $admin_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $admin_name = $row['full_name'];
+        $admin_role = $row['role_name'] ?? 'Admin';
+    }
+}
 
-  if ($admin_id) {
-      $query = "
-          SELECT 
-              CONCAT(first_name, ' ', last_name) AS full_name, 
-              r.role_name 
-          FROM adminusers a
-          LEFT JOIN roles r ON a.role_id = r.role_id
-          WHERE a.admin_id = ?
-      ";
-      $stmt = $conn->prepare($query);
-      $stmt->bind_param("i", $admin_id);
-      $stmt->execute();
-      $result = $stmt->get_result();
+// === FILTER HANDLING ===
+$filter = $_GET['filter'] ?? 'today';
+$dateCondition = "DATE(created_at) = CURDATE()"; // default: today
+if ($filter === 'month') {
+    $dateCondition = "MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())";
+}
 
-      if ($row = $result->fetch_assoc()) {
-          $admin_name = $row['full_name'];
-          $admin_role = $row['role_name'] ?? 'Admin';
-      }
-  }
-
-// Get metrics
+// Metrics
 $newOrders = $totalSales = $totalRevenue = 0;
-$weeklyOrders = [];
 
-$ordersQuery = $conn->query("SELECT COUNT(*) AS new_orders FROM orders WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
+// New orders based on filter
+$ordersQuery = $conn->query("SELECT COUNT(*) AS new_orders FROM orders WHERE $dateCondition");
 if ($row = $ordersQuery->fetch_assoc()) $newOrders = $row['new_orders'];
 
+// Sales and revenue (overall)
 $salesQuery = $conn->query("SELECT COUNT(*) AS total_sales FROM transactions");
 if ($row = $salesQuery->fetch_assoc()) $totalSales = $row['total_sales'];
 
 $revenueQuery = $conn->query("SELECT SUM(total) AS revenue FROM transactions");
-if ($row = $revenueQuery->fetch_assoc()) $totalRevenue = $row['revenue'];
+if ($row = $revenueQuery->fetch_assoc()) $totalRevenue = $row['revenue'] ?? 0;
 
-// Check for notifications
-$newOrdersNotif = 0;
-$lowStockNotif = 0;
+// Notifications
+$newOrdersNotif = $lowStockNotif = 0;
 
-// Check for new orders in last day
+// Orders in last 1 day
 $newOrdersResult = $conn->query("SELECT COUNT(*) as count FROM orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)");
-if ($row = $newOrdersResult->fetch_assoc()) {
-    $newOrdersNotif = $row['count'];
-}
+if ($row = $newOrdersResult->fetch_assoc()) $newOrdersNotif = $row['count'];
 
-// Check for low stock products (adjust threshold as needed)
-$lowStockResult = $conn->query("SELECT COUNT(*) as count FROM products WHERE stocks< 30"); // Example: less than 10
-if ($row = $lowStockResult->fetch_assoc()) {
-    $lowStockNotif = $row['count'];
-}
+// Low stock items
+$lowStockResult = $conn->query("SELECT COUNT(*) as count FROM products WHERE stocks < 30");
+if ($row = $lowStockResult->fetch_assoc()) $lowStockNotif = $row['count'];
 
 $totalNotif = $newOrdersNotif + $lowStockNotif;
 
-
-// Get recent orders
-$recentOrders = $conn->query("SELECT o.order_id, o.total_amount, o.created_at,CONCAT(c.first_name, ' ', c.last_name) AS customer_name 
+// Recent orders (same for all filters)
+$recentOrders = $conn->query("SELECT o.order_id, o.total_amount, o.created_at, CONCAT(c.first_name, ' ', c.last_name) AS customer_name 
     FROM orders o 
     JOIN customers c ON o.customer_id = c.customer_id 
     ORDER BY o.created_at DESC LIMIT 5");
 
-// Weekly data for chart
+// Chart data
 $chartQuery = $conn->query("
     SELECT DATE(created_at) AS order_date, COUNT(*) AS count
     FROM orders 
-    WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    WHERE $dateCondition
     GROUP BY DATE(created_at)
 ");
 
@@ -77,6 +75,7 @@ while ($row = $chartQuery->fetch_assoc()) {
     $chartData[] = $row['count'];
 }
 ?>
+
 <html lang="en">
  <head>
   <meta charset="utf-8"/>
@@ -236,10 +235,10 @@ while ($row = $chartQuery->fetch_assoc()) {
 <!-- Filter -->
 <div class="mt-6">
     <form method="GET" class="mb-4">
-        <select name="filter" class="border p-2 rounded">
-            <option value="week" <?= $_GET['filter'] === 'week' ? 'selected' : '' ?>>This Week</option>
-            <option value="month" <?= $_GET['filter'] === 'month' ? 'selected' : '' ?>>This Month</option>
-        </select>
+    <select name="filter" class="border p-2 rounded">
+    <option value="today" <?= $_GET['filter'] === 'today' ? 'selected' : '' ?>>Today</option>
+    <option value="month" <?= $_GET['filter'] === 'month' ? 'selected' : '' ?>>This Month</option>
+</select>
         <button type="submit" class="ml-2 bg-pink-500 text-white px-4 py-2 rounded">Filter</button>
     </form>
 </div>

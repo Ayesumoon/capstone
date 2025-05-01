@@ -9,12 +9,13 @@ $category_result = $conn->query($category_query);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $product_name = trim($_POST['product_name'] ?? "");
     $description = trim($_POST['description'] ?? "");
-    $price = floatval($_POST['price'] ?? 0);
+    $price = floatval($_POST['price'] ?? 0);  // Selling price
+    $supplier_price = floatval($_POST['supplier_price'] ?? 0);  // Supplier price
     $category_id = intval($_POST['category'] ?? 0);
     $stocks = intval($_POST['stocks'] ?? 0);
     $supplier_name = trim($_POST['supplier'] ?? "");
 
-    if (empty($product_name) || empty($description) || $price <= 0 || $category_id <= 0 || $stocks < 0 || empty($supplier_name)) {
+    if (empty($product_name) || empty($description) || $price <= 0 || $supplier_price <= 0 || $category_id <= 0 || $stocks < 0 || empty($supplier_name)) {
         echo "<script>alert('All fields are required and must be valid!');</script>";
     } else {
         // Check if supplier already exists
@@ -51,12 +52,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
-        // Insert product with supplier_id
-        $sql = "INSERT INTO products (product_name, description, price_id, category_id, stocks, image_url, supplier_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        // Insert product with supplier_id, supplier price, and calculate revenue
+        $revenue = $price - $supplier_price;
+        $sql = "INSERT INTO products (product_name, description, price_id, supplier_price, revenue, category_id, stocks, image_url, supplier_id) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         if ($stmt) {
-            $stmt->bind_param("ssdissi", $product_name, $description, $price, $category_id, $stocks, $image_url, $supplier_id);
+            $stmt->bind_param("ssdissisi", $product_name, $description, $price, $supplier_price, $revenue, $category_id, $stocks, $image_url, $supplier_id);
             if ($stmt->execute()) {
                 echo "<script>alert('Product added successfully!'); window.location.href='products.php';</script>";
             } else {
@@ -94,6 +96,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label class="block font-medium text-gray-700">Description:</label>
                 <textarea name="description" required rows="4"
                     class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400"></textarea>
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700">Supplier Price:</label>
+                <input type="number" step="0.01" name="supplier_price" required
+                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
             </div>
 
             <div>

@@ -15,15 +15,16 @@ if ($admin_id) {
         LEFT JOIN roles r ON a.role_id = r.role_id
         WHERE a.admin_id = ?
     ";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $admin_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $adminStmt = $conn->prepare($query);
+    $adminStmt->bind_param("i", $admin_id);
+    $adminStmt->execute();
+    $result = $adminStmt->get_result();
 
     if ($row = $result->fetch_assoc()) {
         $admin_name = $row['full_name'];
         $admin_role = $row['role_name'] ?? 'Admin';
     }
+    $adminStmt->close();
 }
 
 $categories = [];
@@ -57,14 +58,14 @@ if ($selectedCategory !== 'all') {
     $sqlProducts .= " WHERE p.category_id = ?";
 }
 
-$stmt = $conn->prepare($sqlProducts);
+$productStmt = $conn->prepare($sqlProducts);
 
 if ($selectedCategory !== 'all') {
-    $stmt->bind_param("i", $selectedCategory); // Use category_id instead
+    $productStmt->bind_param("i", $selectedCategory);
 }
 
-$stmt->execute();
-$resultProducts = $stmt->get_result();
+$productStmt->execute();
+$resultProducts = $productStmt->get_result();
 
 if ($resultProducts->num_rows > 0) {
     while ($row = $resultProducts->fetch_assoc()) {
@@ -72,31 +73,30 @@ if ($resultProducts->num_rows > 0) {
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'add_category') {
-  require 'conn.php';
-  $name = trim($_POST['category_name']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['category_name'], $_POST['category_code'])) {
+  $category_name = trim($_POST['category_name']);
+  $category_code = trim($_POST['category_code']);
 
-  if ($name !== '') {
-      $stmt = $conn->prepare("INSERT INTO categories (category_name) VALUES (?)");
-      $stmt->bind_param("s", $name);
-      if ($stmt->execute()) {
-          $newId = $stmt->insert_id;
-          echo json_encode(['success' => true, 'category_id' => $newId, 'category_name' => $name]);
+  if (!empty($category_name) && !empty($category_code)) {
+      $insertStmt = $conn->prepare("INSERT INTO categories (category_name, category_code) VALUES (?, ?)");
+      $insertStmt->bind_param("ss", $category_name, $category_code);
+
+      if ($insertStmt->execute()) {
+          echo "<script>alert('Category added successfully!'); window.location.href='".$_SERVER['PHP_SELF']."';</script>";
+          exit;
       } else {
-          echo json_encode(['success' => false, 'message' => 'DB insert failed']);
+          echo "<script>alert('Error adding category: " . $insertStmt->error . "');</script>";
       }
-      $stmt->close();
+
+      $insertStmt->close();
   } else {
-      echo json_encode(['success' => false, 'message' => 'Empty category name']);
+      echo "<script>alert('Please fill in both fields.');</script>";
   }
-  $conn->close();
-  exit;
 }
 
-
-$stmt->close();
 $conn->close();
 ?>
+
 <html lang="en">
  <head>
   <meta charset="utf-8"/>
@@ -172,43 +172,58 @@ $conn->close();
     </label>
   </form>
 
-  <div class="flex gap-2 items-center">
-  <input type="text" id="newCategoryName" placeholder="New Category" required class="border p-2 rounded">
-  <button onclick="addCategory()" class="bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700">
-    <i class="fas fa-plus mr-1"></i>Category
+  <!-- Add Category Button -->
+<div class="mb-4">
+  <button onclick="openCategoryModal()" type="button"
+    class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">
+    <i class="fas fa-plus mr-1"></i>Add Category
   </button>
 </div>
 
-<script>
-  function addCategory() {
-    const name = document.getElementById('newCategoryName').value.trim();
-    if (!name) return;
+<!-- Modal Background + Form -->
+<div id="categoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+    <h2 class="text-lg font-semibold mb-4">Add New Category</h2>
+    <form method="POST">
+      <div class="mb-4">
+        <label class="block text-gray-700 font-medium mb-1">Category Name:</label>
+        <input type="text" name="category_name" required
+          class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-pink-400">
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 font-medium mb-1">Category Code:</label>
+        <input type="text" name="category_code" required placeholder="e.g. 010"
+          class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-pink-400">
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="submit"
+          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
+        <button type="button" onclick="closeCategoryModal()"
+          class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-    fetch('products.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: 'action=add_category&category_name=' + encodeURIComponent(name),
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        const dropdown = document.querySelector('select[name="category"]');
-        const newOption = document.createElement('option');
-        newOption.value = data.category_id;
-        newOption.text = data.category_name;
-        dropdown.appendChild(newOption);
-        dropdown.value = data.category_id;
-        dropdown.dispatchEvent(new Event('change'));
-        document.getElementById('newCategoryName').value = '';
-      } else {
-        alert(data.message || 'Failed to add category.');
-      }
-    })
-    .catch(err => alert('Error adding category.'));
+<!-- Modal JS -->
+<script>
+  function openCategoryModal() {
+    document.getElementById('categoryModal').classList.remove('hidden');
   }
+
+  function closeCategoryModal() {
+    document.getElementById('categoryModal').classList.add('hidden');
+  }
+
+  // Optional: close modal when clicking outside of it
+  window.addEventListener('click', function (e) {
+    const modal = document.getElementById('categoryModal');
+    if (e.target === modal) {
+      closeCategoryModal();
+    }
+  });
 </script>
+
 
 
   <!-- Conditionally Show Add Product Button -->
@@ -221,18 +236,19 @@ $conn->close();
   <?php } ?>
 </div>
 
-
-
         </div>
-        <div class="overflow-x-auto">
+        
+<div class="overflow-x-auto">
   <table class="min-w-full bg-white border border-gray-200 shadow rounded-lg">
     <thead class="bg-gray-100 text-gray-700">
       <tr>
-        <th class="px-4 py-3 border">Product Image</th>
+      <th class="px-4 py-3 border">Product Image</th>
         <th class="px-4 py-3 border">Product Code</th>
         <th class="px-4 py-3 border">Description</th>
         <th class="px-4 py-3 border">Product ID</th>
         <th class="px-4 py-3 border">Price</th>
+        <th class="px-4 py-3 border">Supplier Price</th>
+        <th class="px-4 py-3 border">Revenue</th>
         <th class="px-4 py-3 border">Category</th>
         <th class="px-4 py-3 border">Stocks</th>
         <th class="px-4 py-3 border">Actions</th>
@@ -249,6 +265,8 @@ $conn->close();
             <td class="px-4 py-3 border"><?php echo htmlspecialchars($product['description']); ?></td>
             <td class="px-4 py-3 border"><?php echo $product['product_id']; ?></td>
             <td class="px-4 py-3 border">₱<?php echo number_format($product['price_id'], 2); ?></td>
+            <td class="px-4 py-3 border">₱<?php echo number_format($product['supplier_price'], 2); ?></td>
+            <td class="px-4 py-3 border">₱<?php echo number_format($product['price_id'] - $product['supplier_price'], 2); ?></td>
             <td class="px-4 py-3 border"><?php echo htmlspecialchars($product['category_name']); ?></td>
             <td class="px-4 py-3 border text-center"><?php echo $product['stocks']; ?></td>
             <td class="px-4 py-3 border">

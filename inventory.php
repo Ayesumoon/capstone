@@ -1,92 +1,93 @@
 <?php
-   session_start();
-   require 'conn.php'; // Include database connection
-   
-   $admin_id = $_SESSION['admin_id'] ?? null;
-   $admin_name = "Admin";
-   $admin_role = "Admin";
-   
-   if ($admin_id) {
-       $query = "
-           SELECT 
-               CONCAT(first_name, ' ', last_name) AS full_name, 
-               r.role_name 
-           FROM adminusers a
-           LEFT JOIN roles r ON a.role_id = r.role_id
-           WHERE a.admin_id = ?
-       ";
-       $stmt = $conn->prepare($query);
-       $stmt->bind_param("i", $admin_id);
-       $stmt->execute();
-       $result = $stmt->get_result();
-   
-       if ($row = $result->fetch_assoc()) {
-           $admin_name = $row['full_name'];
-           $admin_role = $row['role_name'] ?? 'Admin';
-       }
-   }
-   
-   $inventory = [];
-   $categories = [];
-   
-   // Fetch categories from the database
-   $sqlCategories = "SELECT category_id, category_name FROM categories";
-   $resultCategories = $conn->query($sqlCategories);
-   
-   if ($resultCategories === false) {
-       die("Error in SQL query: " . $conn->error);
-   }
-   
-   if ($resultCategories->num_rows > 0) {
-       while ($row = $resultCategories->fetch_assoc()) {
-           $categories[] = $row;
-       }
-   }
-   
-   // Get selected category from the dropdown
-   $selectedCategory = isset($_GET['category']) ? $_GET['category'] : 'all';
-   
-   // Fetch product inventory data with supplier and category filtering
-   $sqlProducts = "
-       SELECT 
-           p.product_id, 
-           p.product_name, 
-           c.category_name, 
-           p.stocks, 
-           p.price_id,
-           s.supplier_name
-       FROM products p
-       INNER JOIN categories c ON p.category_id = c.category_id
-       LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
-   ";
-   
-   if ($selectedCategory !== 'all') {
-       $sqlProducts .= " WHERE c.category_name = ?";
-   }
-   
-   $stmt = $conn->prepare($sqlProducts);
-   
-   if ($selectedCategory !== 'all') {
-       $stmt->bind_param("s", $selectedCategory);
-   }
-   
-   $stmt->execute();
-   $resultProducts = $stmt->get_result();
-   
-   if ($resultProducts === false) {
-       die("Error in SQL query: " . $conn->error);
-   }
-   
-   if ($resultProducts->num_rows > 0) {
-       while ($row = $resultProducts->fetch_assoc()) {
-           $inventory[] = $row;
-       }
-   }
-   
-   $stmt->close();
-   $conn->close();
-   
+session_start();
+require 'conn.php'; // Include database connection
+
+$admin_id = $_SESSION['admin_id'] ?? null;
+$admin_name = "Admin";
+$admin_role = "Admin";
+
+if ($admin_id) {
+    $query = "
+        SELECT 
+            CONCAT(first_name, ' ', last_name) AS full_name, 
+            r.role_name 
+        FROM adminusers a
+        LEFT JOIN roles r ON a.role_id = r.role_id
+        WHERE a.admin_id = ?
+    ";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $admin_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        $admin_name = $row['full_name'];
+        $admin_role = $row['role_name'] ?? 'Admin';
+    }
+}
+
+$inventory = [];
+$categories = [];
+
+// Fetch categories from the database
+$sqlCategories = "SELECT category_id, category_name FROM categories";
+$resultCategories = $conn->query($sqlCategories);
+
+if ($resultCategories === false) {
+    die("Error in SQL query: " . $conn->error);
+}
+
+if ($resultCategories->num_rows > 0) {
+    while ($row = $resultCategories->fetch_assoc()) {
+        $categories[] = $row;
+    }
+}
+
+// Get selected category from the dropdown
+$selectedCategory = isset($_GET['category']) ? $_GET['category'] : 'all';
+
+// Fetch product inventory data with supplier and category filtering
+$sqlProducts = "
+    SELECT 
+        p.product_id, 
+        p.product_name, 
+        c.category_name, 
+        p.stocks, 
+        p.price_id,
+        s.supplier_name,
+        p.supplier_price
+    FROM products p
+    INNER JOIN categories c ON p.category_id = c.category_id
+    LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+";
+
+if ($selectedCategory !== 'all') {
+    $sqlProducts .= " WHERE c.category_name = ?";
+}
+
+$stmt = $conn->prepare($sqlProducts);
+
+if ($selectedCategory !== 'all') {
+    $stmt->bind_param("s", $selectedCategory);
+}
+
+$stmt->execute();
+$resultProducts = $stmt->get_result();
+
+if ($resultProducts === false) {
+    die("Error in SQL query: " . $conn->error);
+}
+
+if ($resultProducts->num_rows > 0) {
+    while ($row = $resultProducts->fetch_assoc()) {
+        $inventory[] = $row;
+    }
+}
+
+$stmt->close();
+$conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -155,20 +156,27 @@
   <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm text-sm">
     <thead class="bg-gray-100 text-gray-700">
       <tr>
-        <th class="px-4 py-3 border text-left">Product ID</th>
-        <th class="px-4 py-3 border text-left">Product Name</th>
+      <th class="px-4 py-3 border text-left">Product ID</th>
+        <th class="px-4 py-3 border text-left">Product Code</th>
         <th class="px-4 py-3 border text-left">Category</th>
         <th class="px-4 py-3 border text-left">Stocks</th>
         <th class="px-4 py-3 border text-left">Price</th>
-        <th class="px-4 py-3 border text-left">Supplier</th> <!-- New column for Supplier -->
+        <th class="px-4 py-3 border text-left">Supplier</th>
+        <th class="px-4 py-3 border text-left">Supplier Price</th> <!-- New column -->
+        <th class="px-4 py-3 border text-left">Revenue</th> <!-- New column -->
         <th class="px-4 py-3 border text-left">Status</th>
       </tr>
     </thead>
     <tbody>
       <?php 
-      if (!empty($inventory)) { 
+       if (!empty($inventory)) { 
         foreach ($inventory as $item) {
           $status = ($item['stocks'] > 20) ? "In Stock" : (($item['stocks'] > 0) ? "Low Stock" : "Out of Stock");
+
+          // Ensure supplier_price is defined
+          $supplier_price = isset($item['supplier_price']) ? floatval($item['supplier_price']) : 0;
+          $price = floatval($item['price_id']);
+          $revenue = ($price - $supplier_price) * intval($item['stocks']);
       ?>
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-2 border"><?php echo $item['product_id']; ?></td>
@@ -179,7 +187,8 @@
           <td class="px-4 py-2 border">
     <?php echo isset($item['supplier_name']) ? htmlspecialchars($item['supplier_name']) : 'No supplier'; ?>
 </td> <!-- Display Supplier -->
-
+<td class="px-4 py-2 border">₱<?php echo number_format($supplier_price, 2); ?></td>
+<td class="px-4 py-2 border text-green-600 font-medium">₱<?php echo number_format($revenue, 2); ?></td>
           <td class="px-4 py-2 border font-semibold capitalize 
             <?php 
               echo ($status === 'In Stock') ? 'text-green-600' : 

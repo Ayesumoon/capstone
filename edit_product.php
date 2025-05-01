@@ -25,6 +25,22 @@ if ($result->num_rows === 0) {
 $product = $result->fetch_assoc();
 $stmt->close();
 
+// Fetch product details with supplier price
+$sql = "SELECT p.*, p.supplier_price FROM products p
+        LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+        WHERE p.product_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $product_id);
+$stmt->execute();
+$result = $stmt->get_result();
+if ($result->num_rows === 0) {
+    echo "<script>alert('Product not found!'); window.location.href='products.php';</script>";
+    exit;
+}
+$product = $result->fetch_assoc();
+$stmt->close();
+
+
 // Fetch categories
 $category_query = "SELECT category_id, category_name FROM categories";
 $category_result = $conn->query($category_query);
@@ -37,10 +53,11 @@ $supplier_result = $conn->query($supplier_query);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $product_name = trim($_POST['product_name']);
     $description = trim($_POST['description']);
-    $price = floatval($_POST['price']);
+    $price_id = floatval($_POST['price']);
     $category_id = intval($_POST['category']);
     $stocks = intval($_POST['stocks']);
     $supplier_id = intval($_POST['supplier']); // Now using supplier ID
+    $supplier_price = floatval($_POST['supplier_price']);
 
     // Image handling
     $image_url = $product['image_url']; // Keep existing image by default
@@ -63,10 +80,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update product details
-    $update_sql = "UPDATE products SET product_name=?, description=?, price_id=?, category_id=?, stocks=?, image_url=?, supplier_id=? WHERE product_id=?";
+    $update_sql = "UPDATE products SET product_name=?, description=?, price_id=?, category_id=?, stocks=?, image_url=?, supplier_id=?, supplier_price=? WHERE product_id=?";
     $stmt = $conn->prepare($update_sql);
     if ($stmt) {
-        $stmt->bind_param("ssdissii", $product_name, $description, $price, $category_id, $stocks, $image_url, $supplier_name, $product_id);
+        $stmt->bind_param("ssdissdii", $product_name, $description, $price_id, $category_id, $stocks, $image_url, $supplier_id, $supplier_price, $product_id);
         if ($stmt->execute()) {
             echo "<script>alert('Product updated successfully!'); window.location.href='products.php';</script>";
         } else {
@@ -78,6 +95,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
+
+<!-- HTML part -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -107,11 +126,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
             <div>
-                <label class="block font-medium text-gray-700">Price:</label>
-                <input type="number" step="0.01" name="price" required
-                    value="<?php echo $product['price_id']; ?>"
-                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
-            </div>
+    <label class="block font-medium text-gray-700">Supplier Price:</label>
+    <input type="number" step="0.01" name="supplier_price" required
+           value="<?php echo $product['supplier_price']; ?>"
+           class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+</div>
+
+
+<div>
+    <label class="block font-medium text-gray-700">Price:</label>
+    <input type="number" step="0.01" name="price" required
+        value="<?php echo htmlspecialchars($product['price_id']); ?>"
+        class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+</div>
+
 
             <div>
                 <label class="block font-medium text-gray-700">Category:</label>
