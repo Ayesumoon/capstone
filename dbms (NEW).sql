@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 30, 2025 at 04:15 PM
+-- Generation Time: May 06, 2025 at 01:42 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -46,7 +46,7 @@ CREATE TABLE `adminusers` (
 --
 
 INSERT INTO `adminusers` (`admin_id`, `username`, `admin_email`, `password_hash`, `role_id`, `status_id`, `created_at`, `first_name`, `last_name`, `last_logged_in`, `last_logged_out`) VALUES
-(1, 'Ayesu', 'nicholedeguzman@yahoo.com', '$2y$10$ENseQNg1WhLbfCjBEi3P4ezFAjuxciD8TWR/KoKqSUAKRJAR8HiKu', 2, 1, '2025-03-30 04:35:12', 'Nichole', 'De Guzman', '2025-04-30 20:48:28', '2025-04-28 18:25:04'),
+(1, 'Ayesu', 'nicholedeguzman@yahoo.com', '$2y$10$ENseQNg1WhLbfCjBEi3P4ezFAjuxciD8TWR/KoKqSUAKRJAR8HiKu', 2, 1, '2025-03-30 04:35:12', 'Nichole', 'De Guzman', '2025-05-06 01:07:12', '2025-05-06 01:08:36'),
 (2, 'admin1', 'johndoe@email.com', '$2y$10$QJ9ELWmPTRfTDLE7BB2s1eoSioYsT2bvwuprqmQW9tQZlzAq1MNkm', 1, 1, '2025-04-13 22:22:07', 'John', 'Doe', '2025-04-14 18:27:15', '2025-04-14 18:46:37');
 
 -- --------------------------------------------------------
@@ -58,8 +58,20 @@ INSERT INTO `adminusers` (`admin_id`, `username`, `admin_email`, `password_hash`
 CREATE TABLE `carts` (
   `cart_id` int(11) NOT NULL,
   `customer_id` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `cart_status` enum('active','inactive') DEFAULT 'active',
+  `product_id` int(11) DEFAULT NULL,
+  `quantity` int(11) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `carts`
+--
+
+INSERT INTO `carts` (`cart_id`, `customer_id`, `created_at`, `cart_status`, `product_id`, `quantity`) VALUES
+(1, 1, '2025-05-05 16:25:46', 'active', 4, 1),
+(2, 1, '2025-05-05 16:56:11', 'active', 3, 1),
+(3, 1, '2025-05-05 17:06:38', 'active', 2, 1);
 
 -- --------------------------------------------------------
 
@@ -83,6 +95,7 @@ CREATE TABLE `cart_items` (
 
 CREATE TABLE `categories` (
   `category_id` int(11) NOT NULL,
+  `category_code` varchar(10) DEFAULT NULL,
   `category_name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -90,17 +103,18 @@ CREATE TABLE `categories` (
 -- Dumping data for table `categories`
 --
 
-INSERT INTO `categories` (`category_id`, `category_name`) VALUES
-(1, 'Blouse'),
-(2, 'Dress'),
-(3, 'Shorts'),
-(4, 'Skirt'),
-(5, 'Trouser'),
-(6, 'Pants'),
-(7, 'Coordinates'),
-(8, 'Shoes'),
-(9, 'Perfume'),
-(19, 'Test1');
+INSERT INTO `categories` (`category_id`, `category_code`, `category_name`) VALUES
+(1, '001', 'Blouse'),
+(2, '002', 'Dress'),
+(3, '003', 'Shorts'),
+(4, '004', 'Skirt'),
+(5, '005', 'Trouser'),
+(6, '006', 'Pants'),
+(7, '007', 'Coordinates'),
+(8, '008', 'Shoes'),
+(9, '009', 'Perfume'),
+(10, '0010', 'Test1'),
+(11, '0011', 'Bags');
 
 -- --------------------------------------------------------
 
@@ -127,20 +141,6 @@ CREATE TABLE `customers` (
 
 INSERT INTO `customers` (`customer_id`, `first_name`, `last_name`, `email`, `phone`, `password_hash`, `address`, `status_id`, `created_at`, `profile_picture`) VALUES
 (1, 'Jane', 'Smith', 'janesmith@email.com', '0987654321', '$2y$10$wwJN5JbK5dyz5VJH7jcgkuaII8ytWuWRJ2YpVgiIoR6Px6qd9IIBK', 'Manila', 1, '2025-04-28 13:15:37', NULL);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `orderitems`
---
-
-CREATE TABLE `orderitems` (
-  `order_item_id` int(11) NOT NULL,
-  `order_id` int(11) DEFAULT NULL,
-  `product_id` int(11) DEFAULT NULL,
-  `quantity` int(11) NOT NULL,
-  `price` decimal(10,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -216,15 +216,20 @@ CREATE TABLE `products` (
   `category_id` int(11) DEFAULT NULL,
   `image_url` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `supplier_id` int(11) DEFAULT NULL
+  `supplier_id` int(11) DEFAULT NULL,
+  `supplier_price` decimal(10,2) NOT NULL,
+  `revenue` decimal(10,2) GENERATED ALWAYS AS (`price_id` - `supplier_price`) STORED
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`product_id`, `product_name`, `description`, `price_id`, `stocks`, `category_id`, `image_url`, `created_at`, `supplier_id`) VALUES
-(1, '001', 'S - M', 200, 30, 2, 'uploads/dress1.jpg', '2025-04-30 14:14:42', 1);
+INSERT INTO `products` (`product_id`, `product_name`, `description`, `price_id`, `stocks`, `category_id`, `image_url`, `created_at`, `supplier_id`, `supplier_price`) VALUES
+(1, '001', 'S - M', 380, 30, 2, 'uploads/dress1.jpg', '2025-04-30 14:14:42', 1, 240.00),
+(2, '002', 'S - L', 500, 20, 10, 'uploads/whiteblouse1.jpg', '2025-05-01 13:25:54', 2, 250.00),
+(3, '021', 'Au de Parfum', 3500, 30, 9, 'uploads/jpgparfum.jpg', '2025-05-01 13:50:35', 2, 3000.00),
+(4, '013', 'Kate Spade', 550, 30, 11, 'uploads/katespade.jpg', '2025-05-05 14:11:33', 1, 450.00);
 
 -- --------------------------------------------------------
 
@@ -313,7 +318,8 @@ CREATE TABLE `suppliers` (
 --
 
 INSERT INTO `suppliers` (`supplier_id`, `supplier_name`, `created_at`) VALUES
-(1, 'Supplier 1', '2025-04-30 13:50:11');
+(1, 'Supplier 1', '2025-04-30 13:50:11'),
+(2, 'Supplier 2', '2025-05-01 13:25:54');
 
 -- --------------------------------------------------------
 
@@ -349,13 +355,17 @@ ALTER TABLE `adminusers`
 -- Indexes for table `carts`
 --
 ALTER TABLE `carts`
-  ADD PRIMARY KEY (`cart_id`);
+  ADD PRIMARY KEY (`cart_id`),
+  ADD KEY `fk_carts_customer_id` (`customer_id`),
+  ADD KEY `fk_carts_product_id` (`product_id`);
 
 --
 -- Indexes for table `cart_items`
 --
 ALTER TABLE `cart_items`
-  ADD PRIMARY KEY (`cart_item_id`);
+  ADD PRIMARY KEY (`cart_item_id`),
+  ADD KEY `fk_cart_items_cart_id` (`cart_id`),
+  ADD KEY `fk_cart_items_product_id` (`product_id`);
 
 --
 -- Indexes for table `categories`
@@ -370,14 +380,6 @@ ALTER TABLE `customers`
   ADD PRIMARY KEY (`customer_id`),
   ADD UNIQUE KEY `email` (`email`),
   ADD KEY `status_id` (`status_id`);
-
---
--- Indexes for table `orderitems`
---
-ALTER TABLE `orderitems`
-  ADD PRIMARY KEY (`order_item_id`),
-  ADD KEY `order_id` (`order_id`),
-  ADD KEY `product_id` (`product_id`);
 
 --
 -- Indexes for table `orders`
@@ -408,8 +410,8 @@ ALTER TABLE `payment_methods`
 --
 ALTER TABLE `products`
   ADD PRIMARY KEY (`product_id`),
-  ADD KEY `category_id` (`category_id`),
-  ADD KEY `fk_supplier` (`supplier_id`);
+  ADD KEY `fk_supplier` (`supplier_id`),
+  ADD KEY `fk_products_category` (`category_id`);
 
 --
 -- Indexes for table `roles`
@@ -459,7 +461,7 @@ ALTER TABLE `adminusers`
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `cart_items`
@@ -471,19 +473,13 @@ ALTER TABLE `cart_items`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
   MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `orderitems`
---
-ALTER TABLE `orderitems`
-  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `orders`
@@ -501,7 +497,7 @@ ALTER TABLE `payment_methods`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `status`
@@ -519,7 +515,7 @@ ALTER TABLE `store_settings`
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `transactions`
@@ -539,17 +535,24 @@ ALTER TABLE `adminusers`
   ADD CONSTRAINT `adminusers_ibfk_2` FOREIGN KEY (`status_id`) REFERENCES `status` (`status_id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `carts`
+--
+ALTER TABLE `carts`
+  ADD CONSTRAINT `fk_carts_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_carts_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `cart_items`
+--
+ALTER TABLE `cart_items`
+  ADD CONSTRAINT `fk_cart_items_cart_id` FOREIGN KEY (`cart_id`) REFERENCES `carts` (`cart_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_cart_items_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `customers`
 --
 ALTER TABLE `customers`
   ADD CONSTRAINT `customers_ibfk_1` FOREIGN KEY (`status_id`) REFERENCES `status` (`status_id`);
-
---
--- Constraints for table `orderitems`
---
-ALTER TABLE `orderitems`
-  ADD CONSTRAINT `orderitems_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `orderitems_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`);
 
 --
 -- Constraints for table `orders`
@@ -564,8 +567,8 @@ ALTER TABLE `orders`
 -- Constraints for table `products`
 --
 ALTER TABLE `products`
-  ADD CONSTRAINT `fk_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`supplier_id`),
-  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`);
+  ADD CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`supplier_id`);
 
 --
 -- Constraints for table `transactions`
