@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 01, 2025 at 04:08 PM
+-- Generation Time: Apr 30, 2025 at 04:15 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -46,7 +46,7 @@ CREATE TABLE `adminusers` (
 --
 
 INSERT INTO `adminusers` (`admin_id`, `username`, `admin_email`, `password_hash`, `role_id`, `status_id`, `created_at`, `first_name`, `last_name`, `last_logged_in`, `last_logged_out`) VALUES
-(1, 'Ayesu', 'nicholedeguzman@yahoo.com', '$2y$10$ENseQNg1WhLbfCjBEi3P4ezFAjuxciD8TWR/KoKqSUAKRJAR8HiKu', 2, 1, '2025-03-30 04:35:12', 'Nichole', 'De Guzman', '2025-05-01 20:57:44', '2025-04-28 18:25:04'),
+(1, 'Ayesu', 'nicholedeguzman@yahoo.com', '$2y$10$ENseQNg1WhLbfCjBEi3P4ezFAjuxciD8TWR/KoKqSUAKRJAR8HiKu', 2, 1, '2025-03-30 04:35:12', 'Nichole', 'De Guzman', '2025-04-30 20:48:28', '2025-04-28 18:25:04'),
 (2, 'admin1', 'johndoe@email.com', '$2y$10$QJ9ELWmPTRfTDLE7BB2s1eoSioYsT2bvwuprqmQW9tQZlzAq1MNkm', 1, 1, '2025-04-13 22:22:07', 'John', 'Doe', '2025-04-14 18:27:15', '2025-04-14 18:46:37');
 
 -- --------------------------------------------------------
@@ -83,7 +83,6 @@ CREATE TABLE `cart_items` (
 
 CREATE TABLE `categories` (
   `category_id` int(11) NOT NULL,
-  `category_code` varchar(10) DEFAULT NULL,
   `category_name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -91,17 +90,17 @@ CREATE TABLE `categories` (
 -- Dumping data for table `categories`
 --
 
-INSERT INTO `categories` (`category_id`, `category_code`, `category_name`) VALUES
-(1, '001', 'Blouse'),
-(2, '002', 'Dress'),
-(3, '003', 'Shorts'),
-(4, '004', 'Skirt'),
-(5, '005', 'Trouser'),
-(6, '006', 'Pants'),
-(7, '007', 'Coordinates'),
-(8, '008', 'Shoes'),
-(9, '009', 'Perfume'),
-(10, '0010', 'Test1');
+INSERT INTO `categories` (`category_id`, `category_name`) VALUES
+(1, 'Blouse'),
+(2, 'Dress'),
+(3, 'Shorts'),
+(4, 'Skirt'),
+(5, 'Trouser'),
+(6, 'Pants'),
+(7, 'Coordinates'),
+(8, 'Shoes'),
+(9, 'Perfume'),
+(19, 'Test1');
 
 -- --------------------------------------------------------
 
@@ -217,19 +216,15 @@ CREATE TABLE `products` (
   `category_id` int(11) DEFAULT NULL,
   `image_url` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `supplier_id` int(11) DEFAULT NULL,
-  `supplier_price` decimal(10,2) NOT NULL,
-  `revenue` decimal(10,2) GENERATED ALWAYS AS (`price_id` - `supplier_price`) STORED
+  `supplier_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`product_id`, `product_name`, `description`, `price_id`, `stocks`, `category_id`, `image_url`, `created_at`, `supplier_id`, `supplier_price`) VALUES
-(1, '001', 'S - M', 200, 30, 2, 'uploads/dress1.jpg', '2025-04-30 14:14:42', 1, 150.00),
-(2, '001', 'S - L', 500, 20, 10, 'uploads/whiteblouse1.jpg', '2025-05-01 13:25:54', 2, 250.00),
-(3, '001', 'Au de Parfum', 3500, 30, 9, 'uploads/jpgparfum.jpg', '2025-05-01 13:50:35', 2, 3000.00);
+INSERT INTO `products` (`product_id`, `product_name`, `description`, `price_id`, `stocks`, `category_id`, `image_url`, `created_at`, `supplier_id`) VALUES
+(1, '001', 'S - M', 200, 30, 2, 'uploads/dress1.jpg', '2025-04-30 14:14:42', 1);
 
 -- --------------------------------------------------------
 
@@ -318,8 +313,7 @@ CREATE TABLE `suppliers` (
 --
 
 INSERT INTO `suppliers` (`supplier_id`, `supplier_name`, `created_at`) VALUES
-(1, 'Supplier 1', '2025-04-30 13:50:11'),
-(2, 'Supplier 2', '2025-05-01 13:25:54');
+(1, 'Supplier 1', '2025-04-30 13:50:11');
 
 -- --------------------------------------------------------
 
@@ -414,8 +408,8 @@ ALTER TABLE `payment_methods`
 --
 ALTER TABLE `products`
   ADD PRIMARY KEY (`product_id`),
-  ADD KEY `fk_supplier` (`supplier_id`),
-  ADD KEY `fk_products_category` (`category_id`);
+  ADD KEY `category_id` (`category_id`),
+  ADD KEY `fk_supplier` (`supplier_id`);
 
 --
 -- Indexes for table `roles`
@@ -477,7 +471,7 @@ ALTER TABLE `cart_items`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `customers`
@@ -507,7 +501,7 @@ ALTER TABLE `payment_methods`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `status`
@@ -525,7 +519,7 @@ ALTER TABLE `store_settings`
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `transactions`
@@ -570,8 +564,8 @@ ALTER TABLE `orders`
 -- Constraints for table `products`
 --
 ALTER TABLE `products`
-  ADD CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`supplier_id`);
+  ADD CONSTRAINT `fk_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`supplier_id`),
+  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`);
 
 --
 -- Constraints for table `transactions`

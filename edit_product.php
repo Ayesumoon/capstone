@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Image handling
     $image_url = $product['image_url']; // Keep existing image by default
     if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
-        $target_dir = "uploads/";
+        $target_dir = "uploads/products";
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0777, true);
         }

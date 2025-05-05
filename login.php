@@ -96,6 +96,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <br>
         <input type="submit" value="Login">
     </form>
-    </a>
+
 </body>
 </html>
