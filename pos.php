@@ -1,14 +1,93 @@
+<?php
+require 'conn.php';
+
+$admin_id = $_SESSION['admin_id'] ?? null;
+$admin_name = "Admin";
+$admin_role = "Admin";
+
+if ($admin_id) {
+    $query = "
+        SELECT 
+            CONCAT(first_name, ' ', last_name) AS full_name, 
+            r.role_name 
+        FROM adminusers a
+        LEFT JOIN roles r ON a.role_id = r.role_id
+        WHERE a.admin_id = ?
+    ";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $admin_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        $admin_name = $row['full_name'];
+        $admin_role = $row['role_name'] ?? 'Admin';
+    }
+}
+
+// Fetch categories
+$categories = [];
+$categoryMap = [];
+
+$categoryQuery = "SELECT category_id, category_name FROM categories";
+$categoryResult = $conn->query($categoryQuery);
+while ($row = $categoryResult->fetch_assoc()) {
+    $categories[] = $row['category_name'];
+    $categoryMap[$row['category_id']] = $row['category_name'];
+}
+
+// Fetch products
+$productQuery = "
+    SELECT product_id, product_name, price_id, category_id, image_url
+    FROM products
+";
+
+$productResult = $conn->query($productQuery);
+$products = [];
+
+while ($row = $productResult->fetch_assoc()) {
+  $products[] = [
+      'id' => (int)$row['product_id'],
+      'name' => $row['product_name'],
+      'price' => (float)$row['price_id'],
+      'category' => $categoryMap[$row['category_id']] ?? 'Unknown',
+      'image' => $row['image_url']  // Add image URL
+  ];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Products</title>
+  <title>Point of Sale</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <style>
+  .receipt-hidden {
+    display: none;
+  }
+
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+
+    #receipt, #receipt * {
+      visibility: visible;
+    }
+
+    #receipt {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+  }
+</style>
+
 </head>
 <body class="bg-gray-100">
-
   <div class="flex min-h-screen">
     <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-md">
@@ -20,19 +99,19 @@
         <div class="mt-4 flex items-center space-x-4">
           <img src="newID.jpg" alt="Admin" width="40" height="40" class="rounded-full" />
           <div>
-            <h3 class="text-sm font-semibold"><?php echo htmlspecialchars($admin_name); ?></h3>
-            <p class="text-xs text-gray-500"><?php echo htmlspecialchars($admin_role); ?></p>
+            <h3 class="text-sm font-semibold"><?= htmlspecialchars($admin_name); ?></h3>
+            <p class="text-xs text-gray-500"><?= htmlspecialchars($admin_role); ?></p>
           </div>
         </div>
       </div>
       <nav class="mt-6">
         <ul>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-tachometer-alt mr-2"></i><a href="dashboard.php">Dashboard</a></li>
-          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-shopping-cart mr-2"></i><a href="products.php">Products</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-box mr-2"></i><a href="products.php">Products</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-shopping-cart mr-2"></i><a href="orders.php">Orders</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-users mr-2"></i><a href="customers.php">Customers</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-warehouse mr-2"></i><a href="inventory.php">Inventory</a></li>
-          <li class="px-4 py-2 bg-pink-100 text-pink-600"><i class="fas fa-cash-register mr-2"></i><a href="POS">Point of Sale</a></li>
+          <li class="px-4 py-2 bg-pink-100 text-pink-600"><i class="fas fa-cash-register mr-2"></i><a href="POS.php">Point of Sale</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-user mr-2"></i><a href="users.php">Users</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-money-check-alt mr-2"></i><a href="payandtransac.php">Payment & Transactions</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-cog mr-2"></i><a href="storesettings.php">Store Settings</a></li>
@@ -51,31 +130,31 @@
           <label class="font-semibold text-lg text-gray-700">Filter by Category:</label>
           <select id="categoryFilter" onchange="filterProducts()" class="p-2 border border-gray-300 rounded-lg shadow-sm">
             <option value="all">All</option>
-            <option value="clothes">Clothes</option>
-            <option value="accessory">Accessory</option>
+            <?php foreach ($categories as $category): ?>
+              <option value="<?= htmlspecialchars($category); ?>"><?= htmlspecialchars($category); ?></option>
+            <?php endforeach; ?>
           </select>
         </div>
 
-        <!-- Product and Cart Layout -->
-        <div class="grid md:grid-cols-2 gap-8">
-          <!-- Product List -->
-          <div class="bg-white p-6 shadow-xl rounded-xl border" id="product-list"></div>
+        <!-- Product List -->
+        <div class="bg-white p-6 shadow-xl rounded-xl border mb-10">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" id="product-list"></div>
+        </div>
 
-          <!-- Cart -->
-          <div class="bg-pink-50 border-2 border-pink-500 p-6 shadow-xl rounded-xl">
-            <h2 class="text-2xl font-semibold mb-4 text-blue-700">🧺 Cart</h2>
-            <ul id="cart-items" class="space-y-4"></ul>
-            <div class="mt-6 text-lg font-bold text-right text-green-700">
-              Total: ₱<span id="total">0.00</span>
-            </div>
-            <button onclick="checkout()" class="mt-6 bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 w-full font-semibold text-lg shadow">
-              🧾 Checkout
-            </button>
+        <!-- Cart -->
+        <div class="bg-pink-50 border-2 border-pink-500 p-6 shadow-xl rounded-xl">
+          <h2 class="text-2xl font-semibold mb-4 text-blue-700">🧺 Cart</h2>
+          <ul id="cart-items" class="space-y-4"></ul>
+          <div class="mt-6 text-lg font-bold text-right text-green-700">
+            Total: ₱<span id="total">0.00</span>
           </div>
+          <button onclick="checkout()" class="mt-6 bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 w-full font-semibold text-lg shadow">
+            🧾 Checkout
+          </button>
         </div>
 
         <!-- Receipt -->
-        <div id="receipt" class="mt-10 bg-white p-6 shadow-xl rounded-xl border hidden max-w-xl mx-auto">
+        <div id="receipt" class="mt-10 bg-white p-6 shadow-xl rounded-xl border max-w-xl mx-auto receipt-hidden">
           <h2 class="text-2xl font-bold mb-4 text-green-700 text-center">📄 Receipt</h2>
           <div id="receipt-content" class="font-mono text-sm text-gray-700 leading-relaxed"></div>
           <button onclick="window.print()" class="mt-6 bg-gray-800 text-white px-6 py-2 rounded hover:bg-black w-full">
@@ -86,15 +165,9 @@
     </main>
   </div>
 
+  <!-- JavaScript -->
   <script>
-    const products = [
-      { id: 1, name: 'Blouse', category: 'clothes', price: 299 },
-      { id: 2, name: 'Dress', category: 'clothes', price: 499 },
-      { id: 3, name: 'Shoes', category: 'accessory', price: 899 },
-      { id: 4, name: 'Perfume', category: 'accessory', price: 399 },
-      { id: 5, name: 'Skirt', category: 'clothes', price: 350 },
-    ];
-
+    const products = <?php echo json_encode($products); ?>;
     let filteredProducts = [...products];
     const cart = [];
 
@@ -103,11 +176,12 @@
       productList.innerHTML = '';
       filteredProducts.forEach(product => {
         productList.innerHTML += `
-          <div class="border-b pb-2 mb-3">
-            <p class="font-medium">${product.name}</p>
-            <p class="text-sm text-gray-500">${product.category}</p>
-            <p>₱${product.price}</p>
-            <button onclick="addToCart(${product.id})" class="mt-1 bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">Add to Cart</button>
+          <div class="border p-3 rounded-md shadow-sm text-center bg-gray-50 hover:shadow-md transition">
+            <img src="${product.image}" alt="${product.name}" class="w-24 h-24 mx-auto object-cover mb-2 rounded">
+            <p class="text-sm font-medium truncate">${product.name}</p>
+            <p class="text-xs text-gray-500">${product.category}</p>
+            <p class="text-sm font-semibold mt-1">₱${product.price}</p>
+            <button onclick="addToCart(${product.id})" class="mt-2 bg-green-500 text-white text-sm px-3 py-1 rounded hover:bg-green-600">Add</button>
           </div>
         `;
       });
@@ -175,31 +249,41 @@
     }
 
     function checkout() {
-      if (cart.length === 0) {
-        alert('Cart is empty!');
-        return;
-      }
+  if (cart.length === 0) {
+    alert('Cart is empty!');
+    return;
+  }
 
-      const receiptContent = document.getElementById('receipt-content');
-      let total = 0;
-      let receiptHTML = <p>Date: ${new Date().toLocaleString()}</p><hr class="my-2">;
+  const receiptContent = document.getElementById('receipt-content');
+  let total = 0;
+  let receiptHTML = `<p>Date: ${new Date().toLocaleString()}</p><hr class="my-2">`;
 
-      cart.forEach(item => {
-        const line = ${item.name} x${item.qty} = ₱${(item.price * item.qty).toFixed(2)};
-        receiptHTML += <p>${line}</p>;
-        total += item.price * item.qty;
-      });
+  cart.forEach(item => {
+    const line = `${item.name} x${item.qty} = ₱${(item.price * item.qty).toFixed(2)}`;
+    receiptHTML += `<p>${line}</p>`;
+    total += item.price * item.qty;
+  });
 
-      receiptHTML += <hr class="my-2"><p class="font-bold">Total: ₱${total.toFixed(2)}</p>;
-      receiptContent.innerHTML = receiptHTML;
+  receiptHTML += `<hr class="my-2"><p class="font-bold">Total: ₱${total.toFixed(2)}</p>`;
+  receiptContent.innerHTML = receiptHTML;
 
-      document.getElementById('receipt').classList.remove('hidden');
-      cart.length = 0;
-      renderCart();
-    }
+  // Show receipt and prepare for printing
+  const receiptDiv = document.getElementById('receipt');
+  receiptDiv.classList.remove('receipt-hidden');
+  document.body.classList.add('print-only-receipt');
 
+  setTimeout(() => {
+    window.print();
+    document.body.classList.remove('print-only-receipt');
+    receiptDiv.classList.add('receipt-hidden'); // Optional: hide again after printing
+  }, 100);
+
+  cart.length = 0; // Clear cart
+  renderCart();    // Update UI
+}
+
+    // Initial render
     renderProducts();
   </script>
 </body>
 </html>
-cdn.tailwindcss.com
