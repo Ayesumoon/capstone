@@ -90,45 +90,63 @@ if ($admin_id) {
               </tr>
             </thead>
             <tbody class="text-gray-700">
-              <?php
-              $sql = "
-                  SELECT 
-                      t.transaction_id,
-                      t.order_id,
-                      CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
-                      pm.payment_method_name,
-                      t.total,
-                      os.order_status_name,
-                      t.date_time
-                  FROM transactions t
-                  LEFT JOIN customers c ON t.customer_id = c.customer_id
-                  LEFT JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
-                  LEFT JOIN order_status os ON t.order_status_id = os.order_status_id
-                  ORDER BY t.date_time DESC
-              ";
-              $result = $conn->query($sql);
+  <?php
+  $sql = "
+      SELECT 
+          t.transaction_id,
+          t.order_id,
+          CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+          pm.payment_method_name,
+          t.total,
+          os.order_status_name,
+          os.order_status_id,
+          t.date_time
+      FROM transactions t
+      LEFT JOIN customers c ON t.customer_id = c.customer_id
+      LEFT JOIN payment_methods pm ON t.payment_method_id = pm.payment_method_id
+      LEFT JOIN order_status os ON t.order_status_id = os.order_status_id
+      ORDER BY t.date_time DESC
+  ";
+  $result = $conn->query($sql);
 
-              if ($result && $result->num_rows > 0) {
-                  while ($row = $result->fetch_assoc()) {
-                      echo "<tr class='hover:bg-gray-50'>
-                          <td class='px-4 py-2 border'>{$row['transaction_id']}</td>
-                          <td class='px-4 py-2 border'>{$row['order_id']}</td>
-                          <td class='px-4 py-2 border'>{$row['customer_name']}</td>
-                          <td class='px-4 py-2 border'>{$row['payment_method_name']}</td>
-                          <td class='px-4 py-2 border'>$" . number_format($row['total'], 2) . "</td>
-                          <td class='px-4 py-2 border font-semibold text-blue-600'>{$row['order_status_name']}</td>
-                          <td class='px-4 py-2 border'>{$row['date_time']}</td>
-                          <td class='px-4 py-2 border'>
-                            <a href='transaction_details.php?id={$row['transaction_id']}' class='text-blue-500 hover:underline'>View Details</a>
-                          </td>
-                      </tr>";
-                  }
-              } else {
-                  echo "<tr><td colspan='8' class='text-center px-4 py-4 text-gray-500 border'>No transactions found.</td></tr>";
-              }
-              $conn->close();
-              ?>
-            </tbody>
+  if ($result && $result->num_rows > 0) {
+      while ($row = $result->fetch_assoc()) {
+          // Fetch all order statuses for the dropdown
+          $status_query = "SELECT * FROM order_status";
+          $status_result = $conn->query($status_query);
+          $status_options = '';
+          while ($status = $status_result->fetch_assoc()) {
+              $selected = ($row['order_status_id'] == $status['order_status_id']) ? 'selected' : '';
+              $status_options .= "<option value='{$status['order_status_id']}' {$selected}>{$status['order_status_name']}</option>";
+          }
+
+          echo "<tr class='hover:bg-gray-50'>
+              <td class='px-4 py-2 border'>{$row['transaction_id']}</td>
+              <td class='px-4 py-2 border'>{$row['order_id']}</td>
+              <td class='px-4 py-2 border'>{$row['customer_name']}</td>
+              <td class='px-4 py-2 border'>{$row['payment_method_name']}</td>
+              <td class='px-4 py-2 border'>$" . number_format($row['total'], 2) . "</td>
+              <td class='px-4 py-2 border font-semibold text-blue-600'>
+                  <form action='update_order_status.php' method='POST'>
+                      <select name='order_status_id' class='border rounded px-2 py-1'>
+                          {$status_options}
+                      </select>
+                      <input type='hidden' name='transaction_id' value='{$row['transaction_id']}'>
+                      <button type='submit' class='bg-blue-500 text-white px-4 py-1 rounded'>Update</button>
+                  </form>
+              </td>
+              <td class='px-4 py-2 border'>{$row['date_time']}</td>
+              <td class='px-4 py-2 border'>
+                  <a href='transaction_details.php?id={$row['transaction_id']}' class='text-blue-500 hover:underline'>View Details</a>
+              </td>
+          </tr>";
+      }
+  } else {
+      echo "<tr><td colspan='8' class='text-center px-4 py-4 text-gray-500 border'>No transactions found.</td></tr>";
+  }
+  ?>
+</tbody>
+
           </table>
         </div>
       </div>

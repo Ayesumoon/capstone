@@ -1,15 +1,17 @@
 <?php
 require 'conn.php';
 
+session_start(); // Ensure session_start() is called
+
 $admin_id = $_SESSION['admin_id'] ?? null;
 $admin_name = "Admin";
 $admin_role = "Admin";
 
 if ($admin_id) {
     $query = "
-        SELECT 
-            CONCAT(first_name, ' ', last_name) AS full_name, 
-            r.role_name 
+        SELECT
+            CONCAT(first_name, ' ', last_name) AS full_name,
+            r.role_name
         FROM adminusers a
         LEFT JOIN roles r ON a.role_id = r.role_id
         WHERE a.admin_id = ?
@@ -23,6 +25,7 @@ if ($admin_id) {
         $admin_name = $row['full_name'];
         $admin_role = $row['role_name'] ?? 'Admin';
     }
+    $stmt->close(); // Close the prepared statement
 }
 
 // Fetch categories
@@ -35,6 +38,7 @@ while ($row = $categoryResult->fetch_assoc()) {
     $categories[] = $row['category_name'];
     $categoryMap[$row['category_id']] = $row['category_name'];
 }
+$categoryResult->free(); // Free the result set
 
 // Fetch products
 $productQuery = "
@@ -47,13 +51,15 @@ $products = [];
 
 while ($row = $productResult->fetch_assoc()) {
   $products[] = [
-      'id' => (int)$row['product_id'],
-      'name' => $row['product_name'],
-      'price' => (float)$row['price_id'],
-      'category' => $categoryMap[$row['category_id']] ?? 'Unknown',
-      'image' => $row['image_url']  // Add image URL
+    'id' => (int)$row['product_id'],
+    'name' => $row['product_name'],
+    'price' => (float)$row['price_id'],
+    'category' => $categoryMap[$row['category_id']] ?? 'Unknown',
+    'image' => $row['image_url']   // Add image URL
   ];
 }
+$productResult->free(); // Free the result set
+$conn->close(); // Close the database connection
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -64,7 +70,7 @@ while ($row = $productResult->fetch_assoc()) {
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
   <style>
-  .receipt-hidden {
+  #receipt {
     display: none;
   }
 
@@ -79,17 +85,18 @@ while ($row = $productResult->fetch_assoc()) {
 
     #receipt {
       position: absolute;
-      top: 0;
       left: 0;
+      top: 0;
       width: 100%;
+      display: block;
     }
   }
 </style>
 
+
 </head>
 <body class="bg-gray-100">
   <div class="flex min-h-screen">
-    <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-md">
       <div class="p-4">
         <div class="flex items-center space-x-4">
@@ -120,72 +127,121 @@ while ($row = $productResult->fetch_assoc()) {
       </nav>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 bg-gradient-to-br from-gray-50 to-gray-200 p-8 font-sans">
-      <div class="max-w-6xl mx-auto">
-        <h1 class="text-4xl font-bold mb-8 text-center text-blue-800">🛒 Seven Dwarfs Boutique</h1>
+    <main class="flex-1 bg-gradient-to-br from-pink-50 to-pink-100 p-8 font-sans">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-4xl font-bold mb-8 text-center text-pink-700">🛒 Seven Dwarfs Boutique</h1>
 
-        <!-- Category Filter -->
-        <div class="mb-6 flex items-center gap-3">
-          <label class="font-semibold text-lg text-gray-700">Filter by Category:</label>
-          <select id="categoryFilter" onchange="filterProducts()" class="p-2 border border-gray-300 rounded-lg shadow-sm">
-            <option value="all">All</option>
-            <?php foreach ($categories as $category): ?>
-              <option value="<?= htmlspecialchars($category); ?>"><?= htmlspecialchars($category); ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
+    <div class="mb-6 flex items-center gap-3">
+      <label class="font-semibold text-lg text-pink-800">Filter by Category:</label>
+      <select id="categoryFilter" onchange="filterProducts()" class="p-2 border border-pink-300 rounded-lg shadow-sm bg-pink-50 focus:ring-pink-300">
+        <option value="all">All</option>
+        <?php foreach ($categories as $category): ?>
+          <option value="<?= htmlspecialchars($category); ?>"><?= htmlspecialchars($category); ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
 
-        <!-- Product List -->
-        <div class="bg-white p-6 shadow-xl rounded-xl border mb-10">
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" id="product-list"></div>
-        </div>
+    <div class="flex flex-col lg:flex-row gap-8">
 
-        <!-- Cart -->
-        <div class="bg-pink-50 border-2 border-pink-500 p-6 shadow-xl rounded-xl">
-          <h2 class="text-2xl font-semibold mb-4 text-blue-700">🧺 Cart</h2>
-          <ul id="cart-items" class="space-y-4"></ul>
-          <div class="mt-6 text-lg font-bold text-right text-green-700">
-            Total: ₱<span id="total">0.00</span>
-          </div>
-          <button onclick="checkout()" class="mt-6 bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 w-full font-semibold text-lg shadow">
-            🧾 Checkout
-          </button>
-        </div>
-
-        <!-- Receipt -->
-        <div id="receipt" class="mt-10 bg-white p-6 shadow-xl rounded-xl border max-w-xl mx-auto receipt-hidden">
-          <h2 class="text-2xl font-bold mb-4 text-green-700 text-center">📄 Receipt</h2>
-          <div id="receipt-content" class="font-mono text-sm text-gray-700 leading-relaxed"></div>
-          <button onclick="window.print()" class="mt-6 bg-gray-800 text-white px-6 py-2 rounded hover:bg-black w-full">
-            🖨️ Print Receipt
-          </button>
+      <div class="w-full lg:w-2/3">
+        <div class="bg-white p-6 shadow-xl rounded-xl border border-pink-200 mb-10">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" id="product-list"></div>
         </div>
       </div>
-    </main>
-  </div>
 
-  <!-- JavaScript -->
+      <div class="w-full lg:w-1/3">
+        <div id="cart" class="bg-white p-6 rounded-xl border border-pink-200 shadow-lg text-base">
+          <h2 class="text-2xl font-semibold mb-4 text-pink-700">🛒 Cart</h2>
+          <div id="cart-items" class="space-y-6"></div>
+
+          <div class="mt-6 text-gray-800 text-lg">
+            <div class="font-bold text-2xl text-pink-700">Total: ₱<span id="total">0.00</span></div>
+          </div>
+
+          <div class="mt-6 space-y-4 text-lg">
+            <div>
+              <label for="cashReceived" class="font-medium text-pink-800">Cash Received:</label>
+              <input id="cashReceived" type="number" min="0" step="0.01"
+                     class="border border-pink-300 px-3 py-2 rounded w-full mt-2 text-lg focus:ring-pink-300"
+                     placeholder="Enter cash received" oninput="updateChange()" />
+            </div>
+            <div>
+              <span class="font-bold text-green-700">Change: ₱<span id="change">0.00</span></span>
+            </div>
+          </div>
+
+          <div class="flex gap-4 mt-6">
+            <button onclick="checkout()" class="bg-pink-600 text-white px-6 py-3 rounded hover:bg-pink-700 transition text-lg">Proceed</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="receipt" class="mt-10 bg-white p-6 shadow-xl rounded-xl border border-pink-200 max-w-md mx-auto font-mono text-sm text-gray-800">
+      <h2 class="text-xl font-bold text-center mb-2 text-pink-700">CASH RECEIPT</h2>
+      <p class="text-center text-pink-800">Seven Dwarfs Boutique<br>Address: Bayambang, Pangasinan<br>Tel: 123-456-7890</p>
+      <hr class="my-2 border-dashed border-pink-300">
+      <div class="flex justify-between">
+        <span id="receipt-date">Date:</span>
+        <span id="receipt-time"></span>
+      </div>
+      <hr class="my-2 border-dashed border-pink-300">
+      <div id="receipt-items" class="space-y-1"></div>
+      <hr class="my-2 border-dashed border-pink-300">
+      <div class="space-y-1">
+        <div>Total: ₱<span id="receipt-total">0.00</span></div>
+        <div>Cash: ₱<span id="receipt-cash">0.00</span></div>
+        <div>Change: ₱<span id="receipt-change">0.00</span></div>
+      </div>
+      <h3 class="text-center font-semibold mt-4 text-pink-600">THANK YOU</h3>
+      <div class="flex justify-center mt-4">
+        <div class="bg-black h-10 w-48"></div> </div>
+    </div>
+  </div>
+</main>
+
+
+<script>
+  const now = new Date();
+  const date = now.toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
+  const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Format: HH:MM
+
+  document.getElementById('receipt-date').textContent = `Date: ${date}`;
+  document.getElementById('receipt-time').textContent = time;
+</script>
+
+
+    </div>
+  </main>
+</div>
+    </div>
+  </div>
+</main>
+
+
   <script>
-    const products = <?php echo json_encode($products); ?>;
+    console.log(<?php echo json_encode($products); ?>); // Check if products are passed correctly
+const products = <?php echo json_encode($products); ?>;
+
     let filteredProducts = [...products];
     const cart = [];
 
     function renderProducts() {
-      const productList = document.getElementById('product-list');
-      productList.innerHTML = '';
-      filteredProducts.forEach(product => {
-        productList.innerHTML += `
-          <div class="border p-3 rounded-md shadow-sm text-center bg-gray-50 hover:shadow-md transition">
-            <img src="${product.image}" alt="${product.name}" class="w-24 h-24 mx-auto object-cover mb-2 rounded">
-            <p class="text-sm font-medium truncate">${product.name}</p>
-            <p class="text-xs text-gray-500">${product.category}</p>
-            <p class="text-sm font-semibold mt-1">₱${product.price}</p>
-            <button onclick="addToCart(${product.id})" class="mt-2 bg-green-500 text-white text-sm px-3 py-1 rounded hover:bg-green-600">Add</button>
-          </div>
-        `;
-      });
-    }
+  console.log("Rendering products...");
+  const productList = document.getElementById('product-list');
+  productList.innerHTML = '';
+  filteredProducts.forEach(product => {
+    productList.innerHTML += `
+      <div class="border p-3 rounded-md shadow-sm text-center bg-gray-50 hover:shadow-md transition">
+        <img src="<span class="math-inline">\{product\.image\}" alt\="</span>{product.name}" class="w-24 h-24 mx-auto object-cover mb-2 rounded">
+        <p class="text-sm font-medium truncate"><span class="math-inline">\{product\.name\}</p\>
+<p class\="text\-xs text\-gray\-500"\></span>{product.category}</p>
+        <p class="text-sm font-semibold mt-1">₱<span class="math-inline">\{product\.price\.toFixed\(2\)\}</p\>
+<button onclick\="addToCart\(</span>{product.id})" class="mt-2 bg-green-500 text-white text-sm px-3 py-1 rounded hover:bg-green-600">Add</button>
+      </div>
+    `;
+  });
+}
 
     function filterProducts() {
       const selected = document.getElementById('categoryFilter').value;
@@ -221,68 +277,161 @@ while ($row = $productResult->fetch_assoc()) {
       renderCart();
     }
 
-    function renderCart() {
-      const cartList = document.getElementById('cart-items');
-      const totalDisplay = document.getElementById('total');
-      cartList.innerHTML = '';
-      let total = 0;
+   function renderCart() {
+  const cartItemsDiv = document.getElementById('cart-items');
+  const totalSpan = document.getElementById('total');
 
-      cart.forEach(item => {
-        total += item.price * item.qty;
-        cartList.innerHTML += `
-          <li class="flex justify-between items-center">
-            <div>
-              <p>${item.name}</p>
-              <p class="text-sm text-gray-500">₱${item.price} x ${item.qty}</p>
-              <div class="space-x-1 mt-1">
-                <button onclick="updateQty(${item.id}, 1)" class="px-2 bg-green-400 text-white rounded">+</button>
-                <button onclick="updateQty(${item.id}, -1)" class="px-2 bg-yellow-400 text-white rounded">-</button>
-                <button onclick="removeFromCart(${item.id})" class="px-2 bg-red-500 text-white rounded">x</button>
-              </div>
-            </div>
-            <span>₱${(item.price * item.qty).toFixed(2)}</span>
-          </li>
-        `;
-      });
+  cartItemsDiv.innerHTML = '';
+  let subtotal = 0;
 
-      totalDisplay.textContent = total.toFixed(2);
-    }
+  cart.forEach((item, index) => {
+    const discountedPrice = item.price * (1 - (item.discount || 0) / 100);
+    const itemTotal = discountedPrice * item.qty;
+    subtotal += itemTotal;
 
-    function checkout() {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'border-b pb-2';
+
+    itemDiv.innerHTML = `
+      <div class="flex justify-between">
+        <span class="font-medium"><span class="math-inline">\{item\.name\}</span\>
+<span\>₱</span>{item.price.toFixed(2)}</span>
+      </div>
+      <div class="flex gap-2 items-center mt-1">
+        <label>Qty:</label>
+        <input type="number" value="<span class="math-inline">\{item\.qty\}" min\="1" class\="w\-12 border rounded px\-1 text\-sm"
+onchange\="updateQuantity\(</span>{index}, this.value)">
+
+        <label>Discount(%):</label>
+        <input type="number" value="<span class="math-inline">\{item\.discount \|\| 0\}" min\="0" max\="100" class\="w\-16 border rounded px\-1 text\-sm"
+onchange\="updateDiscount\(</span>{index}, this.value)">
+
+        <span class="ml-auto">Total: ₱${itemTotal.toFixed(2)}</span>
+      </div>
+    `;
+
+    cartItemsDiv.appendChild(itemDiv);
+  });
+
+  totalSpan.textContent = subtotal.toFixed(2); // Displaying only the total (no tax)
+  updateChange();
+}
+
+function updateQuantity(index, value) {
+  const qty = parseInt(value);
+  if (qty > 0) {
+    cart[index].qty = qty;
+    renderCart();
+  }
+}
+
+function updateDiscount(index, value) {
+  const discount = parseFloat(value);
+  if (discount >= 0 && discount <= 100) {
+    cart[index].discount = discount;
+    renderCart();
+  }
+}
+
+function updateChange() {
+  const cashReceived = parseFloat(document.getElementById('cashReceived').value);
+  let total = 0;
+
+  cart.forEach(item => {
+    const discountedPrice = item.price * (1 - (item.discount || 0) / 100);
+    total += discountedPrice * item.qty;
+  });
+
+  const change = cashReceived - total;
+
+  if (!isNaN(change) && change >= 0) {document.getElementById('change').textContent = change.toFixed(2);
+  } else {
+    document.getElementById('change').textContent = '0.00';
+  }
+}
+
+function checkout() {
   if (cart.length === 0) {
     alert('Cart is empty!');
     return;
   }
 
-  const receiptContent = document.getElementById('receipt-content');
+  const now = new Date();
+  const date = now.toLocaleDateString('en-GB');
+  const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  document.getElementById('receipt-date').textContent = `Date: ${date}`;
+  document.getElementById('receipt-time').textContent = time;
+
+  const receiptItems = document.getElementById('receipt-items');
+  receiptItems.innerHTML = '';
+
   let total = 0;
-  let receiptHTML = `<p>Date: ${new Date().toLocaleString()}</p><hr class="my-2">`;
+  const orderItems = [];
 
   cart.forEach(item => {
-    const line = `${item.name} x${item.qty} = ₱${(item.price * item.qty).toFixed(2)}`;
-    receiptHTML += `<p>${line}</p>`;
-    total += item.price * item.qty;
+    const discountedPrice = item.price * (1 - (item.discount || 0) / 100);
+    const lineTotal = discountedPrice * item.qty;
+    total += lineTotal;
+
+    const itemRow = document.createElement('div');
+    itemRow.textContent = `${item.name} x${item.qty} - ₱${lineTotal.toFixed(2)}`;
+    receiptItems.appendChild(itemRow);
+
+    orderItems.push({
+      product_id: item.id,
+      quantity: item.qty,
+      price: discountedPrice,
+      discount: item.discount || 0,
+      total: lineTotal
+    });
   });
 
-  receiptHTML += `<hr class="my-2"><p class="font-bold">Total: ₱${total.toFixed(2)}</p>`;
-  receiptContent.innerHTML = receiptHTML;
+  const cashReceived = parseFloat(document.getElementById('cashReceived').value);
+  const change = cashReceived - total;
 
-  // Show receipt and prepare for printing
-  const receiptDiv = document.getElementById('receipt');
-  receiptDiv.classList.remove('receipt-hidden');
-  document.body.classList.add('print-only-receipt');
+  if (isNaN(cashReceived) || cashReceived < total) {
+    alert('Invalid or insufficient cash received.');
+    return;
+  }
 
-  setTimeout(() => {
-    window.print();
-    document.body.classList.remove('print-only-receipt');
-    receiptDiv.classList.add('receipt-hidden'); // Optional: hide again after printing
-  }, 100);
+  document.getElementById('receipt-total').textContent = total.toFixed(2);
+  document.getElementById('receipt-cash').textContent = cashReceived.toFixed(2);
+  document.getElementById('receipt-change').textContent = change.toFixed(2);
+  document.getElementById('change').textContent = change.toFixed(2);
 
-  cart.length = 0; // Clear cart
-  renderCart();    // Update UI
+  const adminId = <?= $admin_id ?>;
+
+  fetch('record_transaction.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      adminId: adminId,
+      totalAmount: total,
+      items: orderItems
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('Transaction recorded, order ID:', data.orderId);
+      window.print();
+      cart.length = 0;
+      renderCart();
+      document.getElementById('cashReceived').value = ''; // Clear cash received input
+      document.getElementById('change').textContent = '0.00'; // Reset change display
+    } else {
+      alert('Failed to record transaction: ' + data.error);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Failed to record transaction.');
+  });
 }
 
-    // Initial render
     renderProducts();
   </script>
 </body>

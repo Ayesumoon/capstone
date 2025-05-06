@@ -151,7 +151,7 @@ while ($row = $chartQuery->fetch_assoc()) {
 <li class="px-4 py-2 hover:bg-gray-200">
   <a href="pos.php" class="flex items-center space-x-2">
   <i class="fas fa-cash-register"></i>
-    <span>POS</span>
+    <span>Point of Sale</span>
   </a>
 </li>
 
