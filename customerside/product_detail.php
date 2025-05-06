@@ -42,38 +42,40 @@ if (!$product) {
     }
   </style>
 </head>
+
 <body class="bg-pink-50 text-gray-800 font-sans" x-data="cart()" @keydown.escape.window="showLogin = false; showSignup = false">
-  <!-- Navbar (fixed at the top) -->
-  <nav class="bg-pink-100 shadow-md fixed top-0 left-0 w-full z-50">
+  
+<nav class="bg-pink-100 shadow-md fixed top-0 left-0 w-full z-50">
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
-      <!-- Left: Logo + Search -->
-      <div class="flex flex-1 items-center gap-4">
+      
+    <div class="flex flex-1 items-center gap-4">
+    
         <h1 class="text-2xl font-bold text-pink-600 whitespace-nowrap">Seven Dwarfs Boutique</h1>
         <form action="shop.php" method="get" class="flex flex-1 max-w-sm">
           <input type="text" name="search" placeholder="Search products..." class="w-full px-3 py-2 border border-pink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm">
         </form>
       </div>
 
-      <!-- Center: Navigation Links -->
+      
       <ul class="flex flex-wrap justify-center space-x-4 text-sm md:text-base">
         <li><a href="homepage.php" class="hover:text-pink-500">Home</a></li>
         <li><a href="shop.php" class="hover:text-pink-500 font-semibold">Shop</a></li>
       </ul>
 
-      <!-- Right: Icons -->
+
       <div class="flex items-center gap-4 text-pink-600">
-        <!-- Cart Icon -->
-        <a href="cart.php" class="hover:text-pink-500 relative" title="Cart">
+        
+      <a href="cart.php" class="hover:text-pink-500 relative" title="Cart">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 6h11.1a1 1 0 001-.8l1.4-5.2H7zm0 0l-1-4H4" />
           </svg>
-          <!-- Cart Item Count -->
+          
           <div x-show="cartCount > 0" class="absolute top-0 right-0 bg-pink-600 text-white text-xs rounded-full px-2 py-1">
             <span x-text="cartCount"></span>
           </div>
         </a>
 
-        <!-- Profile -->
+        
         <div class="relative">
           <?php if ($isLoggedIn): ?>
           <div x-data="{ open: false }" class="relative">
@@ -102,15 +104,16 @@ if (!$product) {
     </div>
   </nav>
 
-  <!-- Product Details Page -->
+
   <div class="max-w-4xl mx-auto mt-10 bg-white shadow-lg rounded-lg p-8">
     <div class="flex">
-      <!-- Product Image -->
+
       <div class="flex-none w-1/3">
-        <img src="<?= htmlspecialchars($product['image_url']) ?>" alt="<?= htmlspecialchars($product['product_name']) ?>" class="w-full h-full object-cover rounded-lg">
+      <img src="<?= htmlspecialchars($product['image_url']) ?>"
+      alt="<?= htmlspecialchars($product['product_name']) ?>" class="w-full h-full object-cover rounded-lg">
       </div>
 
-      <!-- Product Info -->
+    
       <div class="ml-8 flex-1">
         <h2 class="text-3xl font-semibold text-pink-600"><?= htmlspecialchars($product['product_name']) ?></h2>
         <p class="text-lg font-semibold text-pink-600 mt-2">₱<?= number_format($product['price_id'], 2) ?></p>
@@ -118,10 +121,11 @@ if (!$product) {
         <p class="text-gray-500 mt-2">Category: <?= htmlspecialchars($product['category_name']) ?></p>
 
         <div class="mt-6">
-  <form action="add_to_cart.php" method="POST">
-    <input type="hidden" name="product_name" value="<?php echo $product['product_name']; ?>">
-    <input type="hidden" name="price" value="<?php echo $product['price_id']; ?>">
-    <input type="number" name="quantity" value="1" min="1" class="border rounded px-2 py-1 mr-2 w-20">
+        <form method="POST" action="add_to_cart.php">
+  <input type="hidden" name="product_name" value="<?= htmlspecialchars($product['product_name']) ?>">
+  <input type="hidden" name="price_id" value="<?= $product['price_id'] ?>">
+  <input type="hidden" name="product_id" value="<?= $product_id ?>">
+  <input type="number" name="quantity" value="1" min="1" class="border rounded px-2 w-16">
     <br>
     <br>
     <button type="submit" class="bg-pink-500 text-white px-6 py-3 rounded-full text-xl shadow-md hover:bg-pink-600 transition">

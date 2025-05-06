@@ -16,7 +16,6 @@ $isLoggedIn = isset($_SESSION['customer_id']);
 
 <body class="bg-gray-50">
 
-<!-- Navigation -->
 <header class="bg-white shadow">
   <div class="container mx-auto px-4 py-3 flex justify-between items-center">
     <div class="text-2xl font-bold text-pink-600">
@@ -27,21 +26,22 @@ $isLoggedIn = isset($_SESSION['customer_id']);
       <li><a href="shop.php" class="hover:text-pink-500 font-semibold">Shop</a></li>
     </ul>
     <div class="flex items-center gap-4 text-pink-600">
-      <a href="cart.php" class="hover:text-pink-500" title="Cart">
-        <!-- Cart Icon -->
-      </a>
+      <a href="cart.php" class="hover:text-pink-500 relative" title="Cart">
+        <span class="absolute top-0 right-0 text-white bg-pink-600 rounded-full text-xs px-2 py-1">
+          <?php echo isset($_SESSION['carts']) ? count($_SESSION['carts']) : 0; ?>
+        </span>
+        </a>
       <div class="relative">
         <?php if ($isLoggedIn): ?>
-          <!-- Profile Dropdown for Logged-In Users -->
+          <a href="profile.php" class="text-pink-600 hover:text-pink-500">Profile</a>
         <?php else: ?>
-          <!-- Profile Button for Non-Logged-In Users -->
+          <a href="login.php" class="text-pink-600 hover:text-pink-500">Login</a>
         <?php endif; ?>
       </div>
     </div>
   </div>
 </header>
 
-<!-- Cart Content -->
 <main class="container mx-auto px-4 py-10">
   <h1 class="text-2xl font-bold mb-6 text-pink-600">My Cart</h1>
 
@@ -60,26 +60,25 @@ $isLoggedIn = isset($_SESSION['customer_id']);
         <tbody>
           <?php 
           $grandTotal = 0;
-    foreach ($_SESSION['carts'] as $productId => $item): 
-    $total = $item['price'] * $item['quantity'];
-    $grandTotal += $total;
-?>
-    <tr class="border-b hover:bg-pink-50">
-        <td class="py-3"><?php echo htmlspecialchars($item['product_name']); ?></td>
-        <td class="py-3">₱<?php echo number_format($item['price'], 2); ?></td>
-        <td class="py-3"><?php echo $item['quantity']; ?></td>
-        <td class="py-3">₱<?php echo number_format($total, 2); ?></td>
-        <td class="py-3">
-            <form action="remove_from_cart.php" method="POST">
-                <input type="hidden" name="product_id" value="<?php echo $productId; ?>">
-                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+          foreach ($_SESSION['carts'] as $productId => $item): 
+            $total = $item['price_id'] * $item['quantity'];
+            $grandTotal += $total;
+          ?>
+            <tr class="border-b hover:bg-pink-50">
+              <td class="py-3"><?php echo htmlspecialchars($item['product_name']); ?></td>
+              <td class="py-3">₱<?php echo number_format($item['price_id'], 2); ?></td>
+              <td class="py-3"><?php echo $item['quantity']; ?></td>
+              <td class="py-3">₱<?php echo number_format($total, 2); ?></td>
+              <td class="py-3">
+                <form action="remove_from_cart.php" method="POST">
+                  <input type="hidden" name="product_id" value="<?php echo $productId; ?>">
+                  <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
                     Remove from Cart
-                </button>
-            </form>
-        </td>
-    </tr>
-<?php endforeach; ?>
-
+                  </button>
+                </form>
+              </td>
+            </tr>
+          <?php endforeach; ?>
         </tbody>
       </table>
 
