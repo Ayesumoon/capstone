@@ -27,47 +27,93 @@ if (isset($_SESSION['customer_id'])) {
 
 // ✅ Now continue to build product shop query
 
+// Assuming you've connected to the database already
+if (isset($_GET['product_id'])) {
+  $product_id = $_GET['product_id'];
+  $stmt = $conn->prepare("SELECT * FROM products WHERE product_id = ?");
+  $stmt->bind_param("i", $product_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  
+  if ($result->num_rows > 0) {
+      $product = $result->fetch_assoc();
+      // Now you can display the product details
+  } else {
+      echo "Product not found.";
+  }
+}
+
+// Initialize categories array
+$categories = [];
+
+// Get categories from the database
+$sql = "SELECT category_name FROM categories";
+$result = mysqli_query($conn, $sql);
+
+if ($result && mysqli_num_rows($result) > 0) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $categories[] = $row['category_name'];
+    }
+} else {
+    // Optionally, log an error or handle empty categories
+    // echo "No categories found or query failed.";
+}
+
+
 // Get category, sort, and search filters from query string
 $selectedCategory = isset($_GET['category']) ? $_GET['category'] : null;
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'latest';
 $searchQuery = isset($_GET['search']) ? $_GET['search'] : null;
 
-// Base SQL
+/// Base SQL
 $sql = "SELECT p.product_name, p.description, p.price_id AS price, p.image_url, c.category_name, p.product_id
-        FROM products p
-        JOIN categories c ON p.category_id = c.category_id
-        WHERE p.stocks > 0";
+FROM products p
+JOIN categories c ON p.category_id = c.category_id
+WHERE p.stocks > 0";
 
 // Add category filter if selected
 if ($selectedCategory) {
-  $sql .= " AND c.category_name = '" . $conn->real_escape_string($selectedCategory) . "'";
+$sql .= " AND c.category_name = ?";
 }
 
 // Add search filter if provided
 if ($searchQuery) {
-  $sql .= " AND p.product_name LIKE '%" . $conn->real_escape_string($searchQuery) . "%'";
+$sql .= " AND p.product_name LIKE ?";
 }
 
 // Add sorting logic
 switch ($sort) {
-  case 'low_to_high':
-    $sql .= " ORDER BY p.price_id ASC";
-    break;
-  case 'high_to_low':
-    $sql .= " ORDER BY p.price_id DESC";
-    break;
-  default:
-    $sql .= " ORDER BY p.product_id DESC"; // latest
+case 'low_to_high':
+$sql .= " ORDER BY p.price_id ASC";
+break;
+case 'high_to_low':
+$sql .= " ORDER BY p.price_id DESC";
+break;
+default:
+$sql .= " ORDER BY p.product_id DESC"; // latest
 }
 
-// ✅ Execute the query AFTER building the full SQL
-$result = $conn->query($sql);
+// ✅ Prepare and execute query
+$stmt = $conn->prepare($sql);
+
+// Bind parameters based on which filters are applied
+if ($selectedCategory && $searchQuery) {
+$searchQuery = "%" . $searchQuery . "%"; // Wildcard for search
+$stmt->bind_param("ss", $selectedCategory, $searchQuery); // Two string parameters
+} elseif ($selectedCategory) {
+$stmt->bind_param("s", $selectedCategory); // Single string parameter
+} elseif ($searchQuery) {
+$searchQuery = "%" . $searchQuery . "%"; // Wildcard for search
+$stmt->bind_param("s", $searchQuery); // Single string parameter
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
+
 if (!$result) {
-  die("Query failed: " . $conn->error);
+die("Query failed: " . $conn->error);
 }
 
-// Define category list for sidebar
-$categories = ['Blouse', 'Dress', 'Shorts', 'Skirt', 'Trouser', 'Pants', 'Coordinates', 'Shoes', 'Perfume'];
 
 ?>
 <!DOCTYPE html>
@@ -123,100 +169,122 @@ $categories = ['Blouse', 'Dress', 'Shorts', 'Skirt', 'Trouser', 'Pants', 'Coordi
         </a>
 
         <!-- Profile Icon -->
-        
-<div class="relative">
+    <!-- Profile -->
+    <div class="relative">
   <?php if ($isLoggedIn): ?>
-    <div x-data="{ open: false }" class="relative">
-      <button @click="open = !open" class="hover:text-pink-500" title="Profile">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A4 4 0 0112 14a4 4 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      </button>
-
-      <!-- Dropdown -->
-      <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-        <a href="profile.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-100">My Profile</a>
-
-        <form action="logout.php" method="POST">
-          <button type="submit" class="w-full text-left px-4 py-2 text-red-500 hover:bg-pink-100">Logout</button>
-        </form>
-      </div>
-    </div>
-  <?php else: ?>
-    <!-- Login Button -->
-    <button @click="showLogin = true" class="hover:text-pink-500" title="Profile">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A4 4 0 0112 14a4 4 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+  <div x-data="{ open: false }" class="relative">
+    <button @click="open = !open" class="hover:text-pink-500" title="Profile">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 0112 14a4 4 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     </button>
+    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+      <a href="profile.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-100">My Profile</a>
+      <a href="purchases.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-100">My Purchases</a>
+      <form action="logout.php" method="POST">
+        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-pink-100">Logout</button>
+      </form>
+    </div>
+  </div>
+  <?php else: ?>
+  <button @click="showLogin = true" class="hover:text-pink-500" title="Profile">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 0112 14a4 4 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  </button>
   <?php endif; ?>
 </div>
-      </div>
-    </div>
-  </nav>
 
-  <!-- Main Content -->
-  <section class="max-w-7xl mx-auto px-4 py-12 flex gap-10">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white rounded-xl shadow-md p-6">
-      <h3 class="text-lg font-bold mb-4 text-pink-700">Filters</h3>
-      <ul class="space-y-2">
-        <li><a href="shop.php" class="text-gray-700 hover:text-pink-600">✨ New Arrivals</a></li>
-        <li><a href="#" class="text-gray-700 hover:text-pink-600">🔥 On Sale</a></li>
-      </ul>
-      <div class="mt-6">
-        <button class="w-full flex justify-between items-center font-semibold text-pink-600">
-          Categories
-          <svg class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        <ul class="mt-3 pl-2 text-sm text-gray-700 space-y-1">
-          <?php foreach ($categories as $cat): ?>
-            <li>
-              <a href="shop.php?category=<?= urlencode($cat) ?>" 
-                class="<?= $selectedCategory === $cat ? 'text-pink-600 font-semibold' : 'hover:text-pink-500' ?>">
-                <?= $cat ?>
-              </a>
-            </li>
-          <?php endforeach; ?>
-        </ul>
-      </div>
-    </aside>
-
-   <!-- Product Grid -->
-<div class="flex-1">
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-    
-    <!-- Product 1 -->
-    <div class="bg-white rounded-xl shadow-md p-4 transform transition-transform duration-300 hover:scale-105 hover:-translate-y-2 hover:shadow-lg">
-      <a href="product_detail.php?product_id=1" class="block">
-        <img src="whiteblouse1.jpg" alt="001" class="w-full h-48 object-cover rounded-lg mb-4">
-        <h4 class="text-lg font-semibold">001</h4>
-        <p class="text-sm text-gray-600 mt-2">Blouse</p>
-        <p class="font-semibold text-pink-600 mt-2">₱499.00</p>
-      </a>
-    </div>
-
-    <!-- Product 2 -->
-    <div class="bg-white rounded-xl shadow-md p-4 transform transition-transform duration-300 hover:scale-105 hover:-translate-y-2 hover:shadow-lg">
-      <a href="product_detail.php?product_id=2" class="block">
-        <img src="trousers.jpg" alt="002" class="w-full h-48 object-cover rounded-lg mb-4">
-        <h4 class="text-lg font-semibold">002</h4>
-        <p class="text-sm text-gray-600 mt-2">Pants</p>
-        <p class="font-semibold text-pink-600 mt-2">₱799.00</p>
-      </a>
-    </div>
-
-    <!-- Product 3 -->
-    <div class="bg-white rounded-xl shadow-md p-4 transform transition-transform duration-300 hover:scale-105 hover:-translate-y-2 hover:shadow-lg">
-      <a href="product_detail.php?product_id=3" class="block">
-        <img src="dress1.jpg" alt="003" class="w-full h-48 object-cover rounded-lg mb-4">
-        <h4 class="text-lg font-semibold">003</h4>
-        <p class="text-sm text-gray-600 mt-2">Dresses</p>
-        <p class="font-semibold text-pink-600 mt-2">₱899.00</p>
-      </a>
-    </div>
 
   </div>
+</nav>
+
+<!-- Login Modal -->
+<div x-show="showLogin" x-transition x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md relative">
+    <button @click="showLogin = false" class="absolute top-3 right-3 text-gray-400 hover:text-pink-500 text-lg font-bold">&times;</button>
+    <h2 class="text-lg font-semibold mb-4 text-pink-600">Login</h2>
+    <form action="login_handler.php" method="POST">
+      <input type="email" name="email" placeholder="Email" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="password" name="password" placeholder="Password" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition">Log In</button>
+    </form>
+    <p class="text-sm text-center mt-4">
+      Don't have an account? 
+      <button @click="showLogin = false; showSignup = true" class="text-pink-600 hover:underline">Sign up here</button>
+    </p>
+  </div>
 </div>
+
+<!-- Signup Modal -->
+<div x-show="showSignup" x-transition x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md relative" x-data="{ password: '', confirmPassword: '', mismatch: false }">
+    <button @click="showSignup = false" class="absolute top-3 right-3 text-gray-400 hover:text-pink-500 text-lg font-bold">&times;</button>
+    <h2 class="text-lg font-semibold mb-4 text-pink-600">Sign Up</h2>
+    <form action="signup_handler.php" method="POST" @submit.prevent="mismatch = password !== confirmPassword; if (!mismatch) $el.submit();">
+      <input type="text" name="first_name" placeholder="First Name" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="text" name="last_name" placeholder="Last Name" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="email" name="email" placeholder="Email" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="text" name="phone" placeholder="Phone" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="text" name="address" placeholder="Address" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="password" name="password" placeholder="Password" x-model="password" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+      <input type="password" name="confirm_password" placeholder="Confirm Password" x-model="confirmPassword" required class="w-full border border-gray-300 p-2 rounded mb-3 focus:ring-2 focus:ring-pink-400">
+
+      <template x-if="mismatch">
+        <p class="text-red-500 text-sm mb-3">Passwords do not match.</p>
+      </template>
+
+      <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition">Sign Up</button>
+    </form>
+  </div>
+</div>
+
+ <!-- Main Content -->
+<section class="max-w-7xl mx-auto px-4 py-12 flex gap-10">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white rounded-xl shadow-md p-6">
+    <h3 class="text-lg font-bold mb-4 text-pink-700">Filters</h3>
+    <ul class="space-y-2">
+      <li><a href="shop.php" class="text-gray-700 hover:text-pink-600">✨ New Arrivals</a></li>
+      <li><a href="#" class="text-gray-700 hover:text-pink-600">🔥 On Sale</a></li>
+    </ul>
+    <div class="mt-6">
+      <button class="w-full flex justify-between items-center font-semibold text-pink-600">
+        Categories
+        <svg class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <ul class="mt-3 pl-2 text-sm text-gray-700 space-y-1">
+        <?php foreach ($categories as $cat): ?>
+          <li>
+            <a href="shop.php?category=<?= urlencode($cat) ?>" 
+              class="<?= $selectedCategory === $cat ? 'text-pink-600 font-semibold' : 'hover:text-pink-500' ?>">
+              <?= $cat ?>
+            </a>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Product Grid -->
+  <div class="flex-1">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+      <?php if ($result && $result->num_rows > 0): ?>
+        <?php while ($product = $result->fetch_assoc()): ?>
+          <div class="bg-white rounded-xl shadow-md p-4 transform transition-transform duration-300 hover:scale-105 hover:-translate-y-2 hover:shadow-lg">
+            <a href="product_detail.php?product_id=<?php echo $product['product_id']; ?>" class="block">
+              <img src="<?php echo $product['image_url']; ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>" class="w-full h-48 object-cover rounded-lg mb-4">
+              <h4 class="text-lg font-semibold"><?php echo htmlspecialchars($product['product_name']); ?></h4>
+              <p class="text-sm text-gray-600 mt-2"><?php echo htmlspecialchars($product['category_name']); ?></p>
+              <p class="font-semibold text-pink-600 mt-2">₱<?php echo number_format($product['price'], 2); ?></p>
+            </a>
+          </div>
+        <?php endwhile; ?>
+      <?php else: ?>
+        <p class="text-gray-500 text-lg">No products found.</p>
+      <?php endif; ?>
+    </div>
+  </div>
+</section>

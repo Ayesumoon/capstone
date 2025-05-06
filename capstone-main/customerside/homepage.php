@@ -7,6 +7,8 @@ if ($conn->connect_error) {
   die("Connection failed: " . $conn->connect_error);
 }
 
+$products = mysqli_query($conn, "SELECT * FROM products"); // adjust table name if needed
+
 $sql = "SELECT product_name, description, price_id AS price, image_url 
         FROM products 
         WHERE stocks > 0 
@@ -77,29 +79,29 @@ $isLoggedIn = isset($_SESSION['customer_id']); // Adjust if you're using a diffe
 
       <!-- Profile -->
       <div class="relative">
-        <?php if ($isLoggedIn): ?>
-        <div x-data="{ open: false }" class="relative">
-          <button @click="open = !open" class="hover:text-pink-500" title="Profile">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 0112 14a4 4 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
-          <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-            <a href="profile.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-100">My Profile</a>
-            <form action="logout.php" method="POST">
-              <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-pink-100">Logout</button>
-            </form>
-          </div>
-        </div>
-        <?php else: ?>
-        <button @click="showLogin = true" class="hover:text-pink-500" title="Profile">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 0112 14a4 4 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </button>
-        <?php endif; ?>
-      </div>
+  <?php if ($isLoggedIn): ?>
+  <div x-data="{ open: false }" class="relative">
+    <button @click="open = !open" class="hover:text-pink-500" title="Profile">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 0112 14a4 4 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    </button>
+    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+      <a href="profile.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-100">My Profile</a>
+      <a href="purchases.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-100">My Purchases</a>
+      <form action="logout.php" method="POST">
+        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-pink-100">Logout</button>
+      </form>
     </div>
+  </div>
+  <?php else: ?>
+  <button @click="showLogin = true" class="hover:text-pink-500" title="Profile">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 0112 14a4 4 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  </button>
+  <?php endif; ?>
+</div>
 
   </div>
 </nav>
@@ -161,30 +163,21 @@ $isLoggedIn = isset($_SESSION['customer_id']); // Adjust if you're using a diffe
 <section class="max-w-7xl mx-auto px-4 py-16">
   <h3 class="text-3xl font-bold text-center text-pink-700 mb-12">Featured Products</h3>
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-    
-    <!-- Product 1 -->
-    <div class="bg-white rounded-xl shadow-md p-4 transition-transform transform hover:scale-105 hover:shadow-xl">
-      <img src="whiteblouse1.jpg" alt="White Blouse 1" class="rounded-md mb-4 w-full h-full object-cover hover:scale-110 transition-transform duration-300 ease-in-out">
-      <h4 class="text-xl font-semibold text-pink-800">001</h4>
-      <p class="text-sm text-gray-600">Sizes: S - M</p>
-    </div>
-
-    <!-- Product 2 -->
-    <div class="bg-white rounded-xl shadow-md p-4 transition-transform transform hover:scale-105 hover:shadow-xl">
-      <img src="trousers.jpg" alt="White Blouse 2" class="rounded-md mb-4 w-full h-full object-cover hover:scale-110 transition-transform duration-300 ease-in-out">
-      <h4 class="text-xl font-semibold text-pink-800">002</h4>
-      <p class="text-sm text-gray-600">Sizes: S - L</p>
-    </div>
-
-    <!-- Product 3 -->
-    <div class="bg-white rounded-xl shadow-md p-4 transition-transform transform hover:scale-105 hover:shadow-xl">
-      <img src="dress1.jpg" alt="White Blouse 3" class="rounded-md mb-4 w-full h-full object-cover hover:scale-110 transition-transform duration-300 ease-in-out">
-      <h4 class="text-xl font-semibold text-pink-800">003</h4>
-      <p class="text-sm text-gray-600">Sizes: S - L</p>
-    </div>
-
+    <?php while($product = mysqli_fetch_assoc($products)) : ?>
+      <div class="bg-white rounded-xl shadow-md p-4 transition-transform transform hover:scale-105 hover:shadow-xl">
+        <img 
+          src="<?= htmlspecialchars($product['image_url']) ?>"
+          alt="<?= htmlspecialchars($product['product_name']) ?>" 
+          class="rounded-md mb-4 w-full h-full object-cover hover:scale-110 transition-transform duration-300 ease-in-out"
+        >
+        <h4 class="text-xl font-semibold text-pink-800"><?= htmlspecialchars($product['product_name']) ?></h4>
+        <p class="text-sm text-gray-600"><?= htmlspecialchars($product['description']) ?></p>
+      </div>
+    <?php endwhile; ?>
   </div>
 </section>
+
+
 
 
 <?php $conn->close(); ?>

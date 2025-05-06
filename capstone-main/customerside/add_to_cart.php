@@ -1,45 +1,43 @@
 <?php
 session_start();
 
-// Make sure a product_id is sent
-if (!isset($_POST['product_id'])) {
-  echo json_encode(['status' => 'error', 'message' => 'No product ID provided']);
-  exit();
+// Ensure the user is logged in
+if (!isset($_SESSION['customer_id'])) {
+    header('Location: login.php'); // Redirect to login page if not logged in
+    exit;
 }
 
-$product_id = (int) $_POST['product_id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'])) {
+    $productId = $_POST['product_id'];
+    $productName = $_POST['product_name'];
+    $price = $_POST['price_id']; // Inconsistent naming: price vs. price_id
+    $quantity = isset($_POST['quantity']) ? (int) $_POST['quantity'] : 1;
 
-// Optional: fetch the product from the database to verify it exists
-require 'conn.php';
-$stmt = $conn->prepare("SELECT product_id, product_name, price_id, image_url FROM products WHERE product_id = ?");
-$stmt->bind_param("i", $product_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$product = $result->fetch_assoc();
+    // Initialize cart if not already
+    if (!isset($_SESSION['carts'])) { // Inconsistent naming: carts vs. cart
+        $_SESSION['carts'] = [];
+    }
 
-if (!$product) {
-  echo json_encode(['status' => 'error', 'message' => 'Product not found']);
-  exit();
-}
+    // Check if product is already in the cart
+    if (isset($_SESSION['carts'][$productId])) {
+        $_SESSION['carts'][$productId]['quantity'] += $quantity;
+    } else {
+        $_SESSION['carts'][$productId] = [
+            'product_name' => $productName,
+            'price_id' => $price, // Keep consistent: price_id
+            'quantity' => $quantity
+        ];
+    }
 
-// Save to session cart
-if (!isset($_SESSION['cart'])) {
-  $_SESSION['cart'] = [];
-}
+    // Debugging line to see if the cart is updating correctly
+    // var_dump($_SESSION['carts']);  // Remove in production
 
-// Check if already in cart, increase quantity if yes
-if (isset($_SESSION['cart'][$product_id])) {
-  $_SESSION['cart'][$product_id]['quantity'] += 1;
+    // Redirect to cart page
+    header('Location: cart.php');
+    exit;
 } else {
-  $_SESSION['cart'][$product_id] = [
-    'product_id' => $product['product_id'],
-    'product_name' => $product['product_name'],
-    'price' => $product['price_id'],
-    'image_url' => $product['image_url'],
-    'quantity' => 1
-  ];
+    // Invalid access
+    header('Location: shop.php');
+    exit;
 }
-
-echo json_encode(['status' => 'success', 'cartCount' => array_sum(array_column($_SESSION['cart'], 'quantity'))]);
-exit();
 ?>
