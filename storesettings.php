@@ -84,6 +84,7 @@ $store_settings = mysqli_fetch_assoc($result); // Fetch the data as an associati
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-shopping-cart mr-2"></i><a href="orders.php">Orders</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-users mr-2"></i><a href="customers.php">Customers</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-warehouse mr-2"></i><a href="inventory.php">Inventory</a></li>
+          <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-cash-register mr-2"></i></i><a href="pos.php">Point of Sale</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-user mr-2"></i><a href="users.php">Users</a></li>
           <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-money-check-alt mr-2"></i><a href="payandtransac.php">Payment & Transactions</a></li>
           <li class="px-4 py-2 bg-pink-100 text-pink-600"><i class="fas fa-cog mr-2"></i><a href="storesettings.php">Store Settings</a></li>

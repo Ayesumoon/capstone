@@ -8,9 +8,9 @@ $admin_role = "Admin";
 
 if ($admin_id) {
     $query = "
-        SELECT 
-            CONCAT(first_name, ' ', last_name) AS full_name, 
-            r.role_name 
+        SELECT
+            CONCAT(first_name, ' ', last_name) AS full_name,
+            r.role_name
         FROM adminusers a
         LEFT JOIN roles r ON a.role_id = r.role_id
         WHERE a.admin_id = ?
@@ -28,11 +28,22 @@ if ($admin_id) {
 
 $orders = [];
 
-// Fetch orders and product names by joining products table using product_id
-$sql = "SELECT o.order_id, o.customer_id, p.product_name AS products, 
-               o.total_amount, o.order_status_id, o.payment_method_id, o.created_at
+// Modified SQL query to fetch customer name and status name
+$sql = "SELECT
+            o.order_id,
+            o.customer_id,
+            c.first_name AS customer_first_name,  -- Customer's first name
+            c.last_name AS customer_last_name,    -- Customer's last name
+            p.product_name AS products,
+            o.total_amount,
+            os.order_status_name AS order_status,    -- Corrected: Order Status Name
+            pm.payment_method_name AS payment_method, -- Payment Method Name
+            o.created_at
         FROM orders o
-        LEFT JOIN products p ON o.product_id = p.product_id"; // Assuming product_id is in orders table
+        LEFT JOIN products p ON o.product_id = p.product_id
+        LEFT JOIN customers c ON o.customer_id = c.customer_id  -- Join customers table
+        LEFT JOIN order_status os ON o.order_status_id = os.order_status_id -- Corrected join column
+        LEFT JOIN payment_methods pm ON o.payment_method_id = pm.payment_method_id"; // Join payment_methods table
 
 $result = $conn->query($sql);
 
@@ -59,7 +70,6 @@ $conn->close();
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="w-64 bg-white shadow-md">
             <div class="p-4">
                 <div class="flex items-center space-x-4">
@@ -73,12 +83,12 @@ $conn->close();
                         <img alt="User profile picture" class="rounded-full" height="40" src="newID.jpg" width="40"/>
                         <div>
                         <h3 class="text-sm font-semibold">
-                        <?php echo htmlspecialchars($admin_name); ?>
+                            <?php echo htmlspecialchars($admin_name); ?>
                         </h3>
                         <p class="text-xs text-gray-500">
-                        <?php echo htmlspecialchars($admin_role); ?>
+                            <?php echo htmlspecialchars($admin_role); ?>
                         </p>
-                       </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -89,6 +99,7 @@ $conn->close();
                     <li class="px-4 py-2 bg-pink-100 text-pink-600"><i class="fas fa-shopping-cart mr-2"></i><a href="orders.php">Orders</a></li>
                     <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-users mr-2"></i><a href="customers.php">Customers</a></li>
                     <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-warehouse mr-2"></i><a href="inventory.php">Inventory</a></li>
+                    <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-cash-register mr-2"></i><a href="pos.php">Point of Sale</a></li>
                     <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-user mr-2"></i><a href="users.php">Users</a></li>
                     <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-money-check-alt mr-2"></i><a href="payandtransac.php">Payment & Transactions</a></li>
                     <li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-cog mr-2"></i><a href="storesettings.php">Store Settings</a></li>
@@ -96,8 +107,7 @@ $conn->close();
                 </ul>
             </nav>
         </div>
-        
-    <!-- Main Content -->
+
     <div class="flex-1 p-6">
       <div class="bg-pink-600 text-white p-4 rounded-t">
         <h1 class="text-xl font-bold">Orders</h1>
@@ -109,44 +119,99 @@ $conn->close();
                     <option value="all">All</option>
                     <option value="pending">Pending</option>
                     <option value="shipped">Shipped</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="refunded">Refunded</option>
                 </select>
                 <label for="date" class="ml-4 mr-2">Date:</label>
                 <input type="date" id="date" class="border rounded-md p-2">
             </div>
-            
+
     <table class="order-table mt-6 w-full table-auto border-collapse bg-white shadow-md">
-        <thead>
-            <tr class="bg-gray-100">
-                <th class="px-4 py-2 border-b">Order ID</th>
-                <th class="px-4 py-2 border-b">Customer ID</th>
-                <th class="px-4 py-2 border-b">Product(s)</th>
-                <th class="px-4 py-2 border-b">Total Amount</th>
-                <th class="px-4 py-2 border-b">Order Status</th>
-                <th class="px-4 py-2 border-b">Payment Method</th>
-                <th class="px-4 py-2 border-b">Order Date</th>
-                <th class="px-4 py-2 border-b">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (!empty($orders)) { 
-                foreach ($orders as $order) { ?>
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2 border-b"><?php echo $order['order_id']; ?></td>
-                        <td class="px-4 py-2 border-b"><?php echo $order['customer_id']; ?></td>
-                        <td class="px-4 py-2 border-b"><?php echo $order['products']; ?></td>
-                        <td class="px-4 py-2 border-b"><?php echo $order['total_amount']; ?></td>
-                        <td class="px-4 py-2 border-b <?php echo strtolower($order['order_status_id']); ?>"><?php echo $order['order_status_id']; ?></td>
-                        <td class="px-4 py-2 border-b"><?php echo $order['payment_method']; ?></td>
-                        <td class="px-4 py-2 border-b"><?php echo $order['created_at']; ?></td>
-                        <td class="px-4 py-2 border-b">
-                            <button class="bg-blue-500 text-white px-4 py-2 rounded">View</button>
-                            <button class="bg-yellow-500 text-white px-4 py-2 rounded">Update</button>
-                        </td>
-                    </tr>
-                <?php } 
-            } else { ?>
-                <tr><td colspan="8" class="text-center px-4 py-2 border-b">No orders found</td></tr>
-            <?php } ?>
-        </tbody>
-    </table>
-</div>
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="px-4 py-2 border-b">Order ID</th>
+                    <th class="px-4 py-2 border-b">Customer</th>  <th class="px-4 py-2 border-b">Product(s)</th>
+                    <th class="px-4 py-2 border-b">Total Amount</th>
+                    <th class="px-4 py-2 border-b">Order Status</th> <th class="px-4 py-2 border-b">Payment Method</th> <th class="px-4 py-2 border-b">Order Date</th>
+                    <th class="px-4 py-2 border-b">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($orders)) {
+                    foreach ($orders as $order) { ?>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2 border-b"><?php echo $order['order_id']; ?></td>
+                            <td class="px-4 py-2 border-b">
+                                <?php
+                                    // Display customer name or "POS Order" if customer_id is NULL
+                                    if ($order['customer_first_name'] && $order['customer_last_name']) {
+                                        echo htmlspecialchars($order['customer_first_name'] . ' ' . $order['customer_last_name']);
+                                    } else {
+                                        echo "POS Order"; // Or any other appropriate label
+                                    }
+                                ?>
+                            </td>
+                            <td class="px-4 py-2 border-b"><?php echo htmlspecialchars($order['products']); ?></td>
+                            <td class="px-4 py-2 border-b"><?php echo $order['total_amount']; ?></td>
+                            <td class="px-4 py-2 border-b <?php echo strtolower($order['order_status']); ?>"><?php echo htmlspecialchars($order['order_status']); ?></td> <td class="px-4 py-2 border-b"><?php echo htmlspecialchars($order['payment_method']); ?></td> <td class="px-4 py-2 border-b"><?php echo $order['created_at']; ?></td>
+                            <td class="px-4 py-2 border-b">
+                                <button class="bg-blue-500 text-white px-4 py-2 rounded">View</button>
+                                <button class="bg-yellow-500 text-white px-4 py-2 rounded">Update</button>
+                            </td>
+                        </tr>
+                    <?php }
+                } else { ?>
+                    <tr><td colspan="8" class="text-center px-4 py-2 border-b">No orders found</td></tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
+
+
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusFilter = document.getElementById('status');
+            const orderTable = document.querySelector('.order-table tbody');
+            const ordersData = <?php echo json_encode($orders); ?>; // Pass PHP orders data to JavaScript
+
+            function filterOrders() {
+                const selectedStatus = statusFilter.value.toLowerCase();
+                orderTable.innerHTML = ''; // Clear the current table body
+
+                ordersData.forEach(order => {
+                    const orderStatusLower = order.order_status.toLowerCase();
+                    if (selectedStatus === 'all' || orderStatusLower === selectedStatus) {
+                        const row = orderTable.insertRow();
+                        row.classList.add('hover:bg-gray-50');
+                        row.innerHTML = `
+                            <td class="px-4 py-2 border-b">${order.order_id}</td>
+                            <td class="px-4 py-2 border-b">
+                                ${order.customer_first_name && order.customer_last_name ? htmlspecialchars(order.customer_first_name + ' ' + order.customer_last_name) : 'POS Order'}
+                            </td>
+                            <td class="px-4 py-2 border-b">${htmlspecialchars(order.products)}</td>
+                            <td class="px-4 py-2 border-b">${order.total_amount}</td>
+                            <td class="px-4 py-2 border-b ${orderStatusLower}">${htmlspecialchars(order.order_status)}</td>
+                            <td class="px-4 py-2 border-b">${htmlspecialchars(order.payment_method)}</td>
+                            <td class="px-4 py-2 border-b">${order.created_at}</td>
+                            <td class="px-4 py-2 border-b">
+                                <button class="bg-blue-500 text-white px-4 py-2 rounded">View</button>
+                                <button class="bg-yellow-500 text-white px-4 py-2 rounded">Update</button>
+                            </td>
+                        `;
+                    }
+                });
+
+                if (orderTable.innerHTML === '') {
+                    orderTable.innerHTML = '<tr><td colspan="8" class="text-center px-4 py-2 border-b">No orders found with the selected status</td></tr>';
+                }
+            }
+
+            statusFilter.addEventListener('change', filterOrders);
+
+            // Initial rendering of all orders
+            filterOrders();
+        });
+    </script>
+</body>
+</html>

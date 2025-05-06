@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 06, 2025 at 01:42 AM
+-- Generation Time: May 06, 2025 at 06:14 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -46,7 +46,7 @@ CREATE TABLE `adminusers` (
 --
 
 INSERT INTO `adminusers` (`admin_id`, `username`, `admin_email`, `password_hash`, `role_id`, `status_id`, `created_at`, `first_name`, `last_name`, `last_logged_in`, `last_logged_out`) VALUES
-(1, 'Ayesu', 'nicholedeguzman@yahoo.com', '$2y$10$ENseQNg1WhLbfCjBEi3P4ezFAjuxciD8TWR/KoKqSUAKRJAR8HiKu', 2, 1, '2025-03-30 04:35:12', 'Nichole', 'De Guzman', '2025-05-06 01:07:12', '2025-05-06 01:08:36'),
+(1, 'Ayesu', 'nicholedeguzman@yahoo.com', '$2y$10$ENseQNg1WhLbfCjBEi3P4ezFAjuxciD8TWR/KoKqSUAKRJAR8HiKu', 2, 1, '2025-03-30 04:35:12', 'Nichole', 'De Guzman', '2025-05-06 11:12:16', '2025-05-06 11:12:08'),
 (2, 'admin1', 'johndoe@email.com', '$2y$10$QJ9ELWmPTRfTDLE7BB2s1eoSioYsT2bvwuprqmQW9tQZlzAq1MNkm', 1, 1, '2025-04-13 22:22:07', 'John', 'Doe', '2025-04-14 18:27:15', '2025-04-14 18:46:37');
 
 -- --------------------------------------------------------
@@ -69,9 +69,13 @@ CREATE TABLE `carts` (
 --
 
 INSERT INTO `carts` (`cart_id`, `customer_id`, `created_at`, `cart_status`, `product_id`, `quantity`) VALUES
-(1, 1, '2025-05-05 16:25:46', 'active', 4, 1),
-(2, 1, '2025-05-05 16:56:11', 'active', 3, 1),
-(3, 1, '2025-05-05 17:06:38', 'active', 2, 1);
+(1, 1, '2025-05-05 16:25:46', '', 4, 1),
+(2, 1, '2025-05-05 16:56:11', '', 3, 10),
+(3, 1, '2025-05-05 17:06:38', '', 2, 13),
+(4, 1, '2025-05-06 01:48:01', '', 4, 6),
+(5, 1, '2025-05-06 01:57:21', '', 1, 2),
+(6, 1, '2025-05-06 01:57:39', 'active', 2, 4),
+(7, 1, '2025-05-06 02:02:59', 'active', 4, 1);
 
 -- --------------------------------------------------------
 
@@ -150,12 +154,28 @@ INSERT INTO `customers` (`customer_id`, `first_name`, `last_name`, `email`, `pho
 
 CREATE TABLE `orders` (
   `order_id` int(11) NOT NULL,
+  `admin_id` int(10) UNSIGNED DEFAULT NULL,
   `customer_id` int(11) DEFAULT NULL,
   `total_amount` decimal(10,2) NOT NULL,
+  `cash_given` decimal(10,2) DEFAULT NULL,
   `order_status_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `product_id` int(11) NOT NULL,
   `payment_method_id` int(10) UNSIGNED DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `order_items`
+--
+
+CREATE TABLE `order_items` (
+  `order_items_id` int(11) NOT NULL,
+  `order_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `price` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -392,6 +412,14 @@ ALTER TABLE `orders`
   ADD KEY `fk_orders_payment_method` (`payment_method_id`);
 
 --
+-- Indexes for table `order_items`
+--
+ALTER TABLE `order_items`
+  ADD PRIMARY KEY (`order_items_id`),
+  ADD KEY `fk_order_items_orders` (`order_id`),
+  ADD KEY `fk_order_items_products` (`product_id`);
+
+--
 -- Indexes for table `order_status`
 --
 ALTER TABLE `order_status`
@@ -461,7 +489,7 @@ ALTER TABLE `adminusers`
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `cart_items`
@@ -562,6 +590,13 @@ ALTER TABLE `orders`
   ADD CONSTRAINT `fk_orders_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_orders_status` FOREIGN KEY (`order_status_id`) REFERENCES `order_status` (`order_status_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`);
+
+--
+-- Constraints for table `order_items`
+--
+ALTER TABLE `order_items`
+  ADD CONSTRAINT `fk_order_items_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`),
+  ADD CONSTRAINT `fk_order_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`);
 
 --
 -- Constraints for table `products`
