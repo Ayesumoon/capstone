@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 require 'conn.php';
@@ -48,17 +49,18 @@ while ($row = $categoryResult->fetch_assoc()) {
     $categories[] = $row;
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Point Of Sale</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POS - Seven Dwarfs Boutique</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
 </head>
 <body class="bg-gray-100">
-    <div class="flex min-h-screen">
+<div class="flex min-h-screen">
         <aside class="w-64 bg-white shadow-md">
             <div class="p-4">
                 <div class="flex items-center space-x-4">
@@ -103,9 +105,10 @@ while ($row = $categoryResult->fetch_assoc()) {
                     </select>
                 </div>
 
-                <div id="product-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"></div>
+                <div id="product-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8">
+                </div>
 
-                <div class="bg-pink-50 border-2 border-pink-500 p-6 shadow-xl rounded-xl mt-12">
+                <div class="bg-pink-50 border-2 border-pink-500 p-6 shadow-xl rounded-xl">
                     <h2 class="text-2xl font-semibold mb-4 text-blue-700">🧺 Cart</h2>
                     <ul id="cart-items" class="space-y-4"></ul>
                     <div class="mt-6 text-lg font-bold text-right text-green-700">
@@ -117,305 +120,236 @@ while ($row = $categoryResult->fetch_assoc()) {
                 </div>
             </div>
         </main>
-    </div>
+  </div>
 
-    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-96">
-            <h3 class="text-xl font-semibold mb-4">💰 Payment</h3>
-            <p class="mb-2">Total Amount: ₱<span id="modal-total">0.00</span></p>
-            <div class="mb-4">
-                <label for="cashGiven" class="block text-gray-700 text-sm font-bold mb-2">Cash Given:</label>
-                <input type="number" id="cashGiven" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter cash amount">
+  <script>
+    //  Data should come from PHP (or an external source), but I'll keep the example data for now.
+    const products = <?= json_encode($products ?? []); ?>; // Use ?? to avoid errors if $products is not set
+    let filteredProducts = [...products];
+    const cart = [];
+
+    //  Utility function to escape HTML to prevent XSS vulnerabilities
+    function escapeHTML(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+    function renderProducts() {
+    const productList = document.getElementById('product-list');
+    if (!productList) {
+        console.error("Product list element not found!");
+        return;
+    }
+    productList.innerHTML = '';
+
+    filteredProducts.forEach(product => {
+        const imageUrl = product.image_url || 'default-image.jpg';
+        const productName = escapeHTML(product.product_name);
+        const description = escapeHTML(product.description);
+        const price = parseFloat(product.price_id);
+
+        productList.innerHTML += `
+            <div class="bg-white p-4 shadow-xl rounded-lg border h-full flex flex-col">
+                <img src="${imageUrl}" onerror="this.src='default-image.jpg'" alt="${productName}" class="w-full h-32 object-contain mb-2 rounded-md">
+                <p class="font-medium text-sm truncate">${productName}</p>
+                <p class="text-xs text-gray-500 truncate">${description}</p>
+                <p class="font-semibold text-blue-500 text-sm">₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+                <button
+                    onclick="addToCart('${product.product_id}')"
+                    class="mt-auto bg-green-400 text-white px-2 py-1 rounded hover:bg-green-500 text-xs"
+                >
+                    Add
+                </button>
             </div>
-            <p class="mb-2 font-semibold">Change: ₱<span id="changeDue">0.00</span></p>
-            <div class="flex justify-end gap-2">
-                <button onclick="closePaymentModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-                <button onclick="processPayment()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Process Payment & Print</button>
-            </div>
-        </div>
-    </div>
+        `;
+    });
+}
 
-    <div id="receipt" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-96">
-            <h3 class="text-xl font-semibold mb-4">🧾 Receipt</h3>
-            <div id="receipt-content" class="space-y-2 text-sm text-gray-700"></div>
-            <button onclick="document.getElementById('receipt').classList.add('hidden')" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                Close
-            </button>
-        </div>
-    </div>
+    function filterProducts() {
+        const selectedCategory = document.getElementById('categoryFilter').value;
+        filteredProducts = selectedCategory === 'all' 
+            ? [...products] 
+            : products.filter(p => p.category_id == selectedCategory); //  Use == for comparison
+        renderProducts();
+    }
 
-
-    <script>
-        const adminName = <?= json_encode($admin_name); ?>;
-        const products = <?= json_encode($products); ?>;
-        console.log("Products array:", products);
-        let filteredProducts = [...products];
-        const cart = [];
-        const totalDisplay = document.getElementById('total');
-        const modalTotalDisplay = document.getElementById('modal-total');
-        const cashGivenInput = document.getElementById('cashGiven');
-        const changeDueDisplay = document.getElementById('changeDue');
-        const paymentModal = document.getElementById('paymentModal');
-        const receiptModal = document.getElementById('receipt');
-        const receiptContent = document.getElementById('receipt-content');
-
-        function escapeHTML(str) {
-            return String(str).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    function addToCart(productId) {
+        const product = products.find(p => p.product_id === productId);
+        if (!product) {
+            console.error("Product not found:", productId);
+            return;
         }
 
-        function renderProducts() {
-            const productList = document.getElementById('product-list');
-            productList.innerHTML = '';
-
-            filteredProducts.forEach(product => {
-                const imageUrl = product.image_url || 'default-image.jpg';
-                const productName = escapeHTML(product.product_name || 'No Name');
-                const description = escapeHTML(product.description || 'No Description');
-                const price = parseFloat(product.price_id || 0);
-
-                productList.innerHTML += `
-                    <div class="bg-white p-4 shadow-xl rounded-lg border h-full">
-                        <img src="${imageUrl}" onerror="this.src='default-image.jpg'" alt="${productName}" class="w-full h-48 object-contain mb-3 rounded-lg" />
-                        <p class="font-medium text-lg truncate">${productName}</p>
-                        <p class="text-sm text-gray-500 truncate">${description}</p>
-                        <p class="font-bold text-blue-500">₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
-                        <button onclick="addToCart('${product.product_id}')" class="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full">
-                            Add to Cart
-                        </button>
-                    </div>
-                `;
+        const existingCartItem = cart.find(item => item.product_id === productId);
+        if (existingCartItem) {
+            existingCartItem.qty++;
+        } else {
+            cart.push({ 
+                product_id: product.product_id, //  Store product_id consistently
+                product_name: product.product_name,
+                price_id: parseFloat(product.price_id), 
+                qty: 1 
             });
         }
+        renderCart();
+    }
 
-        function filterProducts() {
-            const selectedCategory = document.getElementById('categoryFilter').value;
-            filteredProducts = selectedCategory === 'all'
-                ? [...products]
-                : products.filter(p => p.category_id == selectedCategory);
-            renderProducts();
-        }
+    function updateQty(productId, change) {
+        const cartItem = cart.find(item => item.product_id === productId);
+        if (!cartItem) return;
 
-        function addToCart(productId) {
-            console.log("addToCart called with productId:", productId);
-            const product = products.find(p => p.product_id === productId);
+        cartItem.qty += change;
 
-            if (!product) {
-                alert("Product not found");
-                return;
-            }
-
-            const item = cart.find(c => c.product_id === productId);
-
-            if (item) {
-                item.qty++;
-            } else {
-                cart.push({ product_id: product.product_id, product_name: product.product_name, price_id: parseFloat(product.price_id), qty: 1 });
-            }
-
+        if (cartItem.qty <= 0) {
+            removeFromCart(productId);
+        } else {
             renderCart();
         }
-
-        function renderCart() {
-            const cartList = document.getElementById('cart-items');
-            const totalDisplay = document.getElementById('total'); // Get totalDisplay here
-            cartList.innerHTML = '';
-            let total = 0;
-
-            cart.forEach(item => {
-                const subtotal = item.price_id * item.qty;
-                total += subtotal;
-
-                cartList.innerHTML += `
-                    <li class="flex items-center justify-between">
-                        <div>
-                            <p class="font-semibold">${escapeHTML(item.product_name)}</p>
-                            <p class="text-sm text-gray-500">₱${item.price_id.toLocaleString('en-PH', { minimumFractionDigits: 2 })} x ${item.qty}</p>
-                            <div class="space-x-1 mt-1">
-                                <button onclick="updateQty('${item.product_id}', 1)" class="px-2 bg-green-400 text-white rounded">+</button>
-                                <button onclick="updateQty('${item.product_id}', -1)" class="px-2 bg-yellow-400 text-white rounded">-</button>
-                                <button onclick="removeFromCart('${item.product_id}')" class="px-2 bg-red-500 text-white rounded">x</button>
-                            </div>
-                        </div>
-                        <span class="font-bold">₱${subtotal.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
-                    </li>
-                `;
-            });
-
-            totalDisplay.textContent = total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
-            modalTotalDisplay.textContent = total.toLocaleString('en-PH', { minimumFractionDigits: 2 }); // Update modal total
-        }
-
-        function updateQty(productId, change) {
-            const item = cart.find(c => c.product_id === productId);
-            if (!item) return;
-            item.qty += change;
-            if (item.qty <= 0) {
-                removeFromCart(productId);
-            } else {
-                renderCart();
-            }
-        }
-
-        function removeFromCart(productId) {
-            const index = cart.findIndex(c => c.product_id === productId);
-            if (index !== -1) {
-                cart.splice(index, 1);
-                renderCart();
-            }
-        }
-
-        function openPaymentModal() {
-            if (cart.length === 0) {
-                alert('Cart is empty!');
-                return;
-            }
-            paymentModal.classList.remove('hidden');
-            cashGivenInput.value = ''; // Reset cash given input
-            changeDueDisplay.textContent = '0.00'; // Reset change due
-            cashGivenInput.focus();
-        }
-
-        function closePaymentModal() {
-            paymentModal.classList.add('hidden');
-        }
-
-        function processPayment() {
-    const totalAmount = parseFloat(totalDisplay.textContent);
-    const cashGiven = parseFloat(cashGivenInput.value);
-
-    if (isNaN(cashGiven) || cashGiven < totalAmount) {
-        alert('Insufficient cash!');
-        return;
     }
 
-    const change = cashGiven - totalAmount;
-    changeDueDisplay.textContent = change.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+    function removeFromCart(productId) {
+        const index = cart.findIndex(item => item.product_id === productId);
+        if (index !== -1) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+    }
 
-    // Generate and show receipt
-    generateReceipt();
-    closePaymentModal();
-    receiptModal.classList.remove('hidden');
+    function renderCart() {
+        const cartList = document.getElementById('cart-items');
+        const totalDisplay = document.getElementById('total');
+        if (!cartList || !totalDisplay) {
+            console.error("Cart list or total display element not found!");
+            return;
+        }
 
-    // Prepare order details to send to PHP
-    const orderDetails = cart.map(item => ({
-        product_id: item.product_id,
-        quantity: item.qty,
-        price: item.price_id // You might want to store the actual selling price here
-    }));
+        cartList.innerHTML = '';
+        let total = 0;
 
-    // Send order details to PHP script using fetch API
-    fetch('process_order.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            admin_id: <?= json_encode($admin_id); ?>, // Send admin ID
-            total_amount: totalAmount,
-            cash_given: cashGiven,
-            change: change,
-            items: orderDetails
+        cart.forEach(item => {
+            const subtotal = item.price_id * item.qty;
+            total += subtotal;
+
+            const cartItemElement = document.createElement('li');
+            cartItemElement.classList.add('flex', 'justify-between', 'items-center', 'py-2', 'border-b', 'border-gray-200');
+
+            cartItemElement.innerHTML = `
+                <div>
+                    <p class="font-semibold">${escapeHTML(item.product_name)}</p>
+                    <p class="text-sm text-gray-600">₱${item.price_id.toLocaleString('en-PH', { minimumFractionDigits: 2 })} x ${item.qty}</p>
+                    <div class="space-x-2 mt-2">
+                        <button onclick="updateQty('${item.product_id}', 1)" class="px-2 py-1 bg-green-400 text-white rounded">+</button>
+                        <button onclick="updateQty('${item.product_id}', -1)" class="px-2 py-1 bg-yellow-400 text-white rounded">-</button>
+                        <button onclick="removeFromCart('${item.product_id}')" class="px-2 py-1 bg-red-500 text-white rounded">x</button>
+                    </div>
+                </div>
+                <span class="font-bold">₱${subtotal.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+            `;
+
+            cartList.appendChild(cartItemElement);
+        });
+
+        totalDisplay.textContent = total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        modalTotalDisplay.textContent = total.toLocaleString('en-PH', { minimumFractionDigits: 2 }); //  Update modal total
+    }
+
+    function openPaymentModal() {
+        if (cart.length === 0) {
+            alert('Cart is empty!');
+            return;
+        }
+        paymentModal.classList.remove('hidden');
+        cashGivenInput.value = '';
+        changeDueDisplay.textContent = '0.00';
+        cashGivenInput.focus();
+    }
+
+    function closePaymentModal() {
+        paymentModal.classList.add('hidden');
+    }
+
+    function processPayment() {
+        const totalAmount = parseFloat(totalDisplay.textContent.replace(/,/g, ''));  // Remove commas
+        const cashGiven = parseFloat(cashGivenInput.value);
+
+        if (isNaN(cashGiven) || cashGiven < totalAmount) {
+            alert('Insufficient cash!');
+            return;
+        }
+
+        const change = cashGiven - totalAmount;
+        changeDueDisplay.textContent = change.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+
+        generateReceipt();
+        closePaymentModal();
+        receiptModal.classList.remove('hidden');
+
+        const orderDetails = cart.map(item => ({
+            product_id: item.product_id,
+            quantity: item.qty,
+            price: item.price_id
+        }));
+
+        fetch('process_order.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                admin_id: <?= json_encode($admin_id ?? null); ?>, //  Send admin ID
+                total_amount: totalAmount,
+                cash_given: cashGiven,
+                change: change,
+                items: orderDetails
+            })
         })
-    })
-    .then(response => response.text())
-    .then(data => {
-        console.log('Order processing response:', data);
-        if (data === 'success') {
-            alert('Order processed and stock updated successfully!');
-            cart.length = 0; // Clear the cart after successful order
-            renderCart(); // Re-render the empty cart
-        } else {
-            alert('Error processing order: ' + data);
-        }
-    })
-    .catch(error => {
-        console.error('Error sending order data:', error);
-        alert('An error occurred while processing the order.');
-    });
-}
-
-function generateReceipt() {
-    const receiptContent = document.getElementById('receipt-content');
-
-    if (!receiptContent) {
-        console.error("Error: 'receipt-content' element not found in the DOM.");
-        return;
+        .then(response => response.text())
+        .then(data => {
+            console.log('Order processing response:', data);
+            if (data === 'success') {
+                alert('Order processed and stock updated successfully!');
+                cart.length = 0;
+                renderCart();
+            } else {
+                alert('Error processing order: ' + data);
+            }
+        })
+        .catch(error => {
+            console.error('Error sending order data:', error);
+            alert('An error occurred while processing the order.');
+        });
     }
 
-    let adminName = document.getElementById('admin-name-display')?.textContent || "Admin";
+    function generateReceipt() {
+        receiptContent.innerHTML = `
+            <h4 class="text-lg font-semibold mb-2 text-center">Seven Dwarfs Boutique</h4>
+            <p class="text-sm text-center mb-2">Trece Martires, Cavite</p>
+            <p>Admin: ${adminName}</p>
+            <p>Date: ${new Date().toLocaleString()}</p>
+            <hr class="my-2">
+        `;
 
-    receiptContent.innerHTML = `
-        <div style="font-family: sans-serif; font-size: 12px; width: 250px; margin: 0 auto; text-align: left;">
-            <h4 style="font-size: 16px; font-weight: bold; margin-bottom: 2px; text-align: center;">Seven Dwarfs Boutique</h4>
-            <p style="font-size: 10px; text-align: center; margin-bottom: 10px;">Bayambang, Pangasinan</p>
-            <p style="font-size: 10px; margin-bottom: 2px;">Admin: ${adminName}</p>
-            <p style="font-size: 10px; margin-bottom: 10px;">Date: ${new Date().toLocaleString()}</p>
-            <hr style="border-top: 1px dashed #000; margin-bottom: 10px;">
-    `;
+        let total = 0;
+        cart.forEach(item => {
+            const subtotal = item.price_id * item.qty;
+            const line = `${escapeHTML(item.product_name)} x ${item.qty} @ ₱${item.price_id.toLocaleString('en-PH', { minimumFractionDigits: 2 })} = ₱${subtotal.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+            receiptContent.innerHTML += `<p class="text-sm">${line}</p>`;
+            total += subtotal;
+        });
 
-    let total = 0;
-    const cart = getCartItems();
+        receiptContent.innerHTML += `
+            <hr class="my-2">
+            <p class="font-bold text-right">Total: ₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+            <p class="font-semibold text-right">Cash: ₱${parseFloat(cashGivenInput.value).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+            <p class="font-semibold text-right">Change: ₱${changeDueDisplay.textContent}</p>
+            <hr class="my-2">
+            <p class="text-sm text-center">Thank you for your purchase!</p>
+        `;
 
-    cart.forEach(item => {
-        const subtotal = item.price_id * item.qty;
-        const formattedPrice = parseFloat(item.price_id).toLocaleString('en-PH', { minimumFractionDigits: 2 });
-        const formattedSubtotal = subtotal.toLocaleString('en-PH', { minimumFractionDigits: 2 });
-        const line = `<div style="display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px;">
-                        <span style="flex-grow: 1;">${escapeHTML(item.product_name)} x ${item.qty}</span>
-                        <span style="text-align: right;">₱${formattedSubtotal}</span>
-                    </div>`;
-        receiptContent.innerHTML += line;
-        total += subtotal;
-    });
+        window.print(); //  Trigger print dialog
+    }
 
-    const cashGivenInput = document.getElementById('cash-given');
-    const changeDueDisplay = document.getElementById('change-due');
+    renderProducts();
+    renderCart();
 
-    const formattedTotal = total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
-    const cashGivenValue = parseFloat(cashGivenInput?.value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 });
-    const changeDueValue = changeDueDisplay?.textContent || '0.00';
-
-    receiptContent.innerHTML += `
-            <hr style="border-top: 1px dashed #000; margin-top: 10px; margin-bottom: 5px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; font-weight: bold;">
-                <span>Total:</span>
-                <span>₱${formattedTotal}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; font-weight: bold;">
-                <span>Cash:</span>
-                <span>₱${cashGivenValue}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 10px; font-weight: bold;">
-                <span>Change:</span>
-                <span>₱${changeDueValue}</span>
-            </div>
-            <hr style="border-top: 1px dashed #000; margin-bottom: 10px;">
-            <p style="font-size: 10px; text-align: center;">Thank you for your purchase!</p>
-        </div>
-    `;
-
-    window.print();
-}
-
-function escapeHTML(str) {
-    return str.replace(/[&<>"']/g, function(match) {
-        switch (match) {
-            case '&': return '&amp;';
-            case '<': return '&lt;';
-            case '>': return '&gt;';
-            case '"': return '&quot;';
-            case "'": return '&#39;';
-            default: return match;
-        }
-    });
-}
-
-function getCartItems() {
-    const cartData = localStorage.getItem('pos_cart');
-    return cartData ? JSON.parse(cartData) : [];
-}
-        renderProducts();
-    </script>
+</script>
 </body>
 </html>
