@@ -85,102 +85,148 @@ while ($row = $chartQuery->fetch_assoc()) {
   </title>
   <script src="https://cdn.tailwindcss.com">
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
  </head>
  <body class="bg-gray-100">
   <div class="flex h-screen">
    <!-- Sidebar -->
-   <div class="w-64 bg-white shadow-md">
-    <div class="p-4">
-     <div class="flex items-center space-x-4">
-      <img alt="User profile picture" class="rounded-full" height="50" src="logo.png" width="50"/>
+<div class="w-64 bg-white shadow-md min-h-screen" x-data="{ userMenu: false, productMenu: false }">
+  <div class="p-4">
+    <div class="flex items-center space-x-4">
+      <img alt="Logo" class="rounded-full" height="50" src="logo.png" width="50" />
       <div>
-       <h2 class="text-lg font-semibold">
-        SevenDwarfs
-       </h2>
+        <h2 class="text-lg font-semibold">SevenDwarfs</h2>
       </div>
-     </div>
-     <div class="mt-4">
-      <div class="flex items-center space-x-4">
-       <img alt="User profile picture" class="rounded-full" height="40" src="newID.jpg" width="40"/>
-       <div>
-        <h3 class="text-sm font-semibold">
-        <?php echo htmlspecialchars($admin_name); ?>
-        </h3>
-        <p class="text-xs text-gray-500">
-        <?php echo htmlspecialchars($admin_role); ?>
-        </p>
-       </div>
-      </div>
-     </div>
     </div>
-    <nav class="mt-6">
-     <ul>
-     <li class="px-4 py-2 hover:bg-gray-200">
-  <a href="dashboard.php" class="flex items-center space-x-2">
-  <li class="px-4 py-2 bg-pink-100 text-pink-600"><i class="fas fa-tachometer-alt"></i>
-    <span>Dashboard</strong></span>
-  </a>
-</li>
-<li class="px-4 py-2 hover:bg-gray-200">
-  <a href="products.php" class="flex items-center space-x-2">
-    <i class="fas fa-box"></i>
-    <span>Products</span>
-  </a>
-</li>
-<li class="px-4 py-2 hover:bg-gray-200">
-  <a href="orders.php" class="flex items-center space-x-2">
-    <i class="fas fa-shopping-cart"></i>
-    <span>Orders</span>
-  </a>
-</li>
-<li class="px-4 py-2 hover:bg-gray-200">
-  <a href="customers.php" class="flex items-center space-x-2">
-    <i class="fas fa-users"></i>
-    <span>Customers</span>
-  </a>
-</li>
+    <div class="mt-4">
+      <div class="flex items-center space-x-4">
+        <img alt="Admin profile" class="rounded-full" height="40" src="newID.jpg" width="40" />
+        <div>
+          <h3 class="text-sm font-semibold"><?php echo htmlspecialchars($admin_name); ?></h3>
+          <p class="text-xs text-gray-500"><?php echo htmlspecialchars($admin_role); ?></p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<li class="px-4 py-2 hover:bg-gray-200">
-  <a href="inventory.php" class="flex items-center space-x-2">
-    <i class="fas fa-warehouse"></i>
-    <span>Inventory</span>
-  </a>
+  <nav class="mt-6">
+    <ul>
+      <!-- Dashboard -->
+      <li class="px-4 py-2 bg-pink-100 text-pink-600">
+        <a href="dashboard.php" class="flex items-center space-x-2">
+          <i class="fas fa-tachometer-alt"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+
+      <!-- User Management -->
+<li class="px-4 py-2 hover:bg-gray-200 cursor-pointer" @click="userMenu = !userMenu">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+      <i class="fas fa-users-cog"></i>
+      <span>User Management</span>
+    </div>
+    <i class="fas fa-chevron-down" :class="{ 'rotate-180': userMenu }"></i>
+  </div>
 </li>
+<ul x-show="userMenu" x-transition class="pl-8 text-sm text-gray-700 space-y-1">
+  <li class="py-1">
+    <a href="users.php" class="flex items-center space-x-2 hover:text-pink-600">
+      <i class="fas fa-user"></i>
+      <span>User</span>
+    </a>
+  </li>
+  <li class="py-1">
+    <a href="user_types.php" class="flex items-center space-x-2 hover:text-pink-600">
+      <i class="fas fa-id-badge"></i>
+      <span>Type</span>
+    </a>
+  </li>
+  <li class="py-1">
+    <a href="user_status.php" class="flex items-center space-x-2 hover:text-pink-600">
+      <i class="fas fa-toggle-on"></i>
+      <span>Status</span>
+    </a>
+  </li>
+  <li class="py-1">
+    <a href="customers.php" class="flex items-center space-x-2 hover:text-pink-600">
+      <i class="fas fa-users"></i>
+      <span>Customer</span>
+    </a>
+  </li>
+</ul>
 
-<li class="px-4 py-2 hover:bg-gray-200">
-  <a href="pos.php" class="flex items-center space-x-2">
-  <i class="fas fa-cash-register"></i>
-    <span>Point of Sale</span>
-  </a>
+<!-- Product Management -->
+<li class="px-4 py-2 hover:bg-gray-200 cursor-pointer" @click="productMenu = !productMenu">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+      <i class="fas fa-box-open"></i>
+      <span>Product Management</span>
+    </div>
+    <i class="fas fa-chevron-down" :class="{ 'rotate-180': productMenu }"></i>
+  </div>
 </li>
+<ul x-show="productMenu" x-transition class="pl-8 text-sm text-gray-700 space-y-1">
+  <li class="py-1">
+    <a href="categories.php" class="flex items-center space-x-2 hover:text-pink-600">
+      <i class="fas fa-tags"></i>
+      <span>Category</span>
+    </a>
+  </li>
+  <li class="py-1">
+    <a href="products.php" class="flex items-center space-x-2 hover:text-pink-600">
+      <i class="fas fa-box"></i>
+      <span>Product</span>
+    </a>
+  </li>
+  <li class="py-1">
+    <a href="inventory.php" class="flex items-center space-x-2 hover:text-pink-600">
+      <i class="fas fa-warehouse"></i>
+      <span>Inventory</span>
+    </a>
+  </li>
+</ul>
 
-<li class="px-4 py-2 hover:bg-gray-200">
-  <a href="users.php" class="flex items-center space-x-2">
-    <i class="fas fa-user"></i>
-    <span>Users</span>
-  </a>
-</li>
 
-<li class="px-4 py-2 hover:bg-gray-200"><i class="fas fa-money-check-alt mr-2"></i><a href="payandtransac.php">Payment & Transactions</a></li>
+      <!-- Other Links -->
+      <li class="px-4 py-2 hover:bg-gray-200">
+        <a href="orders.php" class="flex items-center space-x-2">
+          <i class="fas fa-shopping-cart"></i>
+          <span>Orders</span>
+        </a>
+      </li>
 
-<li class="px-4 py-2 hover:bg-gray-200">
-  <a href="storesettings.php" class="flex items-center space-x-2">
-    <i class="fas fa-cog"></i>
-    <span>Store Settings</span>
-  </a>
-</li>
+      <li class="px-4 py-2 hover:bg-gray-200">
+        <a href="pos.php" class="flex items-center space-x-2">
+          <i class="fas fa-cash-register"></i>
+          <span>Point of Sale</span>
+        </a>
+      </li>
 
-<li class="px-4 py-2 hover:bg-gray-200">
-  <a href="logout.php" class="flex items-center space-x-2">
-    <i class="fas fa-sign-out-alt"></i>
-    <span>Log out</span>
-  </a>
-</li>
+      <li class="px-4 py-2 hover:bg-gray-200">
+        <a href="payandtransac.php" class="flex items-center space-x-2">
+          <i class="fas fa-money-check-alt"></i>
+          <span>Payment & Transactions</span>
+        </a>
+      </li>
 
-     </ul>
-    </nav>
-   </div>
+      <li class="px-4 py-2 hover:bg-gray-200">
+        <a href="storesettings.php" class="flex items-center space-x-2">
+          <i class="fas fa-cog"></i>
+          <span>Store Settings</span>
+        </a>
+      </li>
+
+      <li class="px-4 py-2 hover:bg-gray-200">
+        <a href="logout.php" class="flex items-center space-x-2">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Log out</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>
    <!-- Main Content -->
    <div class="flex-1 flex flex-col">
     <!-- Header -->
