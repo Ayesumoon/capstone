@@ -137,11 +137,7 @@
           <i class="fas fa-shopping-cart mr-2"></i>Orders
         </a>
       </li>
-      <li class="px-4 py-2 hover:bg-gray-200">
-        <a href="pos.php" class="flex items-center">
-          <i class="fas fa-cash-register mr-2"></i>Point of Sale
-        </a>
-      </li>
+      
       <li class="px-4 py-2 hover:bg-gray-200">
         <a href="payandtransac.php" class="flex items-center">
           <i class="fas fa-money-check-alt mr-2"></i>Payment & Transactions
