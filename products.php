@@ -303,7 +303,6 @@ $conn->close();
         <th class="px-4 py-3 border">Supplier Price</th>
         <th class="px-4 py-3 border">Revenue</th>
         <th class="px-4 py-3 border">Category</th>
-        <th class="px-4 py-3 border">Stocks</th>
         <th class="px-4 py-3 border">Actions</th>
       </tr>
     </thead>
@@ -321,7 +320,6 @@ $conn->close();
             <td class="px-4 py-3 border">₱<?php echo number_format($product['supplier_price'], 2); ?></td>
             <td class="px-4 py-3 border">₱<?php echo number_format($product['price_id'] - $product['supplier_price'], 2); ?></td>
             <td class="px-4 py-3 border"><?php echo htmlspecialchars($product['category_name']); ?></td>
-            <td class="px-4 py-3 border text-center"><?php echo $product['stocks']; ?></td>
             <td class="px-4 py-3 border">
             <div class="flex justify-center mt-4">
   <div class="flex gap-2">

@@ -50,36 +50,41 @@ $supplier_query = "SELECT supplier_id, supplier_name FROM suppliers";
 $supplier_result = $conn->query($supplier_query);
 
 // Handle form submission
+// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $product_name = trim($_POST['product_name']);
-    $description = trim($_POST['description']);
+    $sizes = isset($_POST['sizes']) ? implode(", ", $_POST['sizes']) : "";
+    $colors = isset($_POST['colors']) ? implode(", ", $_POST['colors']) : "";
+
+    $description = "Sizes: " . $sizes . " | Colors: " . $colors;
+
     $price_id = floatval($_POST['price']);
     $category_id = intval($_POST['category']);
     $stocks = intval($_POST['stocks']);
-    $supplier_id = intval($_POST['supplier']); // Now using supplier ID
+    $supplier_id = intval($_POST['supplier']);
     $supplier_price = floatval($_POST['supplier_price']);
 
     // Image handling
-    $image_url = $product['image_url']; // Keep existing image by default
+    $image_url = $product['image_url'];
     if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
-        $target_dir = "uploads/products";
+        $target_dir = "uploads/products/";
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0777, true);
         }
 
-        $target_file = $target_dir . basename($_FILES["image"]["name"]);
+        $unique_name = uniqid() . "_" . basename($_FILES["image"]["name"]);
+        $target_file = $target_dir . $unique_name;
         $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
         $allowed_types = ["jpg", "jpeg", "png", "gif"];
 
         if (in_array($imageFileType, $allowed_types)) {
             move_uploaded_file($_FILES["image"]["tmp_name"], $target_file);
-            $image_url = $target_file; // Update image path
+            $image_url = $target_file;
         } else {
             echo "<script>alert('Only JPG, JPEG, PNG & GIF files are allowed.');</script>";
         }
     }
 
-    // Update product details
     $update_sql = "UPDATE products SET product_name=?, description=?, price_id=?, category_id=?, stocks=?, image_url=?, supplier_id=?, supplier_price=? WHERE product_id=?";
     $stmt = $conn->prepare($update_sql);
     if ($stmt) {
@@ -94,6 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "Error preparing statement.";
     }
 }
+
 ?>
 
 <!-- HTML part -->
@@ -110,98 +116,137 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
         <h2 class="text-2xl font-bold text-pink-600 mb-4">Edit Product</h2>
 
-        <form action="edit_product.php?id=<?php echo $product_id; ?>" method="POST" enctype="multipart/form-data" class="space-y-4">
-            
+        <form action="edit_product.php?id=<?php echo $product_id; ?>" method="POST" enctype="multipart/form-data" class="space-y-8">
+
+    <!-- Product Info -->
+    <div>
+        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Product Information</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label class="block font-medium text-gray-700">Product Name:</label>
-                <input type="text" name="product_name" required
-                    value="<?php echo htmlspecialchars($product['product_name']); ?>"
-                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                <label class="block text-sm font-medium text-gray-700">Product Name</label>
+                <input type="text" name="product_name" required value="<?php echo htmlspecialchars($product['product_name']); ?>"
+                    class="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-pink-500 focus:border-pink-500">
             </div>
 
             <div>
-                <label class="block font-medium text-gray-700">Description:</label>
-                <textarea name="description" rows="4" required
-                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400"><?php echo htmlspecialchars($product['description']); ?></textarea>
+                <label class="block text-sm font-medium text-gray-700">Stock Quantity</label>
+                <input type="number" name="stocks" required value="<?php echo $product['stocks']; ?>"
+                    class="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-pink-500 focus:border-pink-500">
             </div>
 
             <div>
-    <label class="block font-medium text-gray-700">Supplier Price:</label>
-    <input type="number" step="0.01" name="supplier_price" required
-           value="<?php echo $product['supplier_price']; ?>"
-           class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
-</div>
-
-
-<div>
-    <label class="block font-medium text-gray-700">Price:</label>
-    <input type="number" step="0.01" name="price" required
-        value="<?php echo htmlspecialchars($product['price_id']); ?>"
-        class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
-</div>
-
+                <label class="block text-sm font-medium text-gray-700">Supplier Price</label>
+                <input type="number" step="0.01" name="supplier_price" required value="<?php echo $product['supplier_price']; ?>"
+                    class="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-pink-500 focus:border-pink-500">
+            </div>
 
             <div>
-                <label class="block font-medium text-gray-700">Category:</label>
+                <label class="block text-sm font-medium text-gray-700">Selling Price</label>
+                <input type="number" step="0.01" name="price" required value="<?php echo htmlspecialchars($product['price_id']); ?>"
+                    class="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-pink-500 focus:border-pink-500">
+            </div>
+        </div>
+    </div>
+
+    <!-- Category and Supplier -->
+    <div>
+        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Category & Supplier</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Category</label>
                 <select name="category" required
-                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    class="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-pink-500 focus:border-pink-500">
                     <option value="">Select Category</option>
                     <?php
-                    if ($category_result->num_rows > 0) {
-                        while ($row = $category_result->fetch_assoc()) {
-                            $selected = ($product['category_id'] == $row['category_id']) ? "selected" : "";
-                            echo "<option value='" . $row['category_id'] . "' $selected>" . htmlspecialchars($row['category_name']) . "</option>";
-                        }
-                    } else {
-                        echo "<option value=''>No categories available</option>";
+                    while ($row = $category_result->fetch_assoc()) {
+                        $selected = ($product['category_id'] == $row['category_id']) ? "selected" : "";
+                        echo "<option value='{$row['category_id']}' $selected>" . htmlspecialchars($row['category_name']) . "</option>";
                     }
                     ?>
                 </select>
             </div>
 
             <div>
-                <label class="block font-medium text-gray-700">Stock Quantity:</label>
-                <input type="number" name="stocks" required
-                    value="<?php echo $product['stocks']; ?>"
-                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
-            </div>
-
-            <div>
-                <label class="block font-medium text-gray-700">Supplier:</label>
+                <label class="block text-sm font-medium text-gray-700">Supplier</label>
                 <select name="supplier" required
-                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    class="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-pink-500 focus:border-pink-500">
                     <option value="">Select Supplier</option>
                     <?php
-                    if ($supplier_result->num_rows > 0) {
-                        while ($row = $supplier_result->fetch_assoc()) {
-                            $selected = ($product['supplier_id'] == $row['supplier_id']) ? "selected" : "";
-                            echo "<option value='" . $row['supplier_id'] . "' $selected>" . htmlspecialchars($row['supplier_name']) . "</option>";
-                        }
-                    } else {
-                        echo "<option value=''>No suppliers available</option>";
+                    while ($row = $supplier_result->fetch_assoc()) {
+                        $selected = ($product['supplier_id'] == $row['supplier_id']) ? "selected" : "";
+                        echo "<option value='{$row['supplier_id']}' $selected>" . htmlspecialchars($row['supplier_name']) . "</option>";
                     }
                     ?>
                 </select>
             </div>
+        </div>
+    </div>
 
-            <div>
-                <label class="block font-medium text-gray-700">Product Image:</label>
-                <input type="file" name="image" accept="image/*"
-                    class="mt-1 block w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-pink-500 file:text-white hover:file:bg-pink-600">
-                
-                <?php if (!empty($product['image_url'])): ?>
-                    <p class="mt-2 text-sm text-gray-600">Current Image:</p>
-                    <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="Product Image" class="mt-1 w-24 h-24 rounded border">
-                <?php endif; ?>
-            </div>
+    <!-- Media Upload -->
+    <div>
+        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Product Image</h3>
+        <div>
+            <input type="file" name="image" accept="image/*"
+                class="block w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-pink-500 file:text-white hover:file:bg-pink-600">
+            <?php if (!empty($product['image_url'])): ?>
+                <p class="mt-2 text-sm text-gray-600">Current Image:</p>
+                <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="Product Image" class="mt-1 w-24 h-24 rounded border">
+            <?php endif; ?>
+        </div>
+    </div>
 
-            <div class="flex gap-4 pt-4">
-                <input type="submit" value="Update Product"
-                    class="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600 transition-all cursor-pointer">
-                <a href="products.php"
-                    class="text-pink-500 hover:underline self-center">Back to Products</a>
-            </div>
-        </form>
+    <!-- Sizes -->
+    <div>
+        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Sizes</h3>
+        <div class="flex flex-wrap gap-3">
+            <?php
+            $sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'Free Size'];
+            foreach ($sizeOptions as $size) {
+                $checked = (strpos($product['description'], $size) !== false) ? "checked" : "";
+                echo '
+                <label class="cursor-pointer">
+                    <input type="checkbox" name="sizes[]" value="' . $size . '" class="hidden peer" ' . $checked . '>
+                    <div class="px-4 py-2 border rounded-md text-sm font-semibold 
+                                peer-checked:bg-pink-500 peer-checked:text-white peer-checked:border-pink-600 transition-all">
+                        ' . $size . '
+                    </div>
+                </label>';
+            }
+            ?>
+        </div>
+    </div>
+
+    <!-- Colors -->
+    <div>
+        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Colors</h3>
+        <div class="flex flex-wrap gap-4">
+            <?php
+            $colorOptions = ['Red', 'Black', 'White', 'Pink', 'Blue', 'Green', 'Yellow', 'Purple'];
+            foreach ($colorOptions as $color) {
+                $hex = strtolower($color);
+                $checked = (strpos($product['description'], $color) !== false) ? "checked" : "";
+                echo '
+                <label class="relative cursor-pointer">
+                    <input type="checkbox" name="colors[]" value="' . $color . '" class="hidden peer" ' . $checked . '>
+                    <div class="w-8 h-8 rounded-full border-2 border-gray-300 peer-checked:border-blue-500"
+                         style="background-color:' . $hex . ';"></div>
+                </label>';
+            }
+            ?>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-4 pt-6">
+        <input type="submit" value="Update Product"
+            class="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600 transition-all cursor-pointer">
+        <a href="products.php"
+            class="text-pink-500 hover:underline self-center">Back to Products</a>
+    </div>
+</form>
+
     </div>
 
 </body>
