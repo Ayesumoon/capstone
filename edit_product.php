@@ -64,28 +64,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $supplier_id = intval($_POST['supplier']);
     $supplier_price = floatval($_POST['supplier_price']);
 
-    // Image handling
-    $image_url = $product['image_url'];
-    if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
-        $target_dir = "uploads/products/";
-        if (!is_dir($target_dir)) {
-            mkdir($target_dir, 0777, true);
-        }
+    $image_urls = [];
 
-        $unique_name = uniqid() . "_" . basename($_FILES["image"]["name"]);
-        $target_file = $target_dir . $unique_name;
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-        $allowed_types = ["jpg", "jpeg", "png", "gif"];
-
-        if (in_array($imageFileType, $allowed_types)) {
-            move_uploaded_file($_FILES["image"]["tmp_name"], $target_file);
-            $image_url = $target_file;
-        } else {
-            echo "<script>alert('Only JPG, JPEG, PNG & GIF files are allowed.');</script>";
-        }
+// Handle multiple images
+if (isset($_FILES["images"]) && count($_FILES["images"]["name"]) > 0) {
+    $target_dir = "uploads/products/";
+    if (!is_dir($target_dir)) {
+        mkdir($target_dir, 0777, true);
     }
 
-    $update_sql = "UPDATE products SET product_name=?, description=?, price_id=?, category_id=?, stocks=?, image_url=?, supplier_id=?, supplier_price=? WHERE product_id=?";
+    foreach ($_FILES["images"]["tmp_name"] as $index => $tmp_name) {
+        $file_name = $_FILES["images"]["name"][$index];
+        $file_tmp = $_FILES["images"]["tmp_name"][$index];
+        $file_error = $_FILES["images"]["error"][$index];
+
+        if ($file_error === 0) {
+            $unique_name = uniqid() . "_" . basename($file_name);
+            $target_file = $target_dir . $unique_name;
+            $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+            $allowed_types = ["jpg", "jpeg", "png", "gif"];
+
+            if (in_array($imageFileType, $allowed_types)) {
+                move_uploaded_file($file_tmp, $target_file);
+                $image_urls[] = $target_file;
+            }
+        }
+    }
+}
+
+// If no new images uploaded, retain old
+$image_url = !empty($image_urls) ? implode(",", $image_urls) : $product['image_url'];
+
+$update_sql = "UPDATE products SET product_name=?, description=?, price_id=?, category_id=?, stocks=?, image_url=?, supplier_id=?, supplier_price=? WHERE product_id=?";
     $stmt = $conn->prepare($update_sql);
     if ($stmt) {
         $stmt->bind_param("ssdissdii", $product_name, $description, $price_id, $category_id, $stocks, $image_url, $supplier_id, $supplier_price, $product_id);
@@ -110,8 +120,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Product</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+  }
+</style>
+
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
+<body class="bg-gray-100 min-h-screen p-6 transition-all duration-300 ease-in-out">
 
     <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
         <h2 class="text-2xl font-bold text-pink-600 mb-4">Edit Product</h2>
@@ -184,18 +201,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 
-    <!-- Media Upload -->
-    <div>
-        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Product Image</h3>
-        <div>
-            <input type="file" name="image" accept="image/*"
-                class="block w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-pink-500 file:text-white hover:file:bg-pink-600">
-            <?php if (!empty($product['image_url'])): ?>
-                <p class="mt-2 text-sm text-gray-600">Current Image:</p>
-                <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="Product Image" class="mt-1 w-24 h-24 rounded border">
-            <?php endif; ?>
+  <!-- Media Upload -->
+<div>
+    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Product Images</h3>
+    <input type="file" name="images[]" accept="image/*" multiple
+        class="block w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-pink-500 file:text-white hover:file:bg-pink-600">
+
+    <?php if (!empty($product['image_url'])): 
+        $imageArray = explode(",", $product['image_url']);
+    ?>
+        <div class="grid grid-cols-3 gap-4 mt-4">
+            <?php foreach ($imageArray as $img): ?>
+                <img src="<?php echo htmlspecialchars(trim($img)); ?>" alt="Product Image"
+                     class="w-24 h-24 object-cover rounded shadow border">
+            <?php endforeach; ?>
         </div>
-    </div>
+    <?php endif; ?>
+</div>
+
 
     <!-- Sizes -->
     <div>
@@ -248,6 +271,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </form>
 
     </div>
-
 </body>
 </html>
