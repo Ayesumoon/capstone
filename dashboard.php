@@ -75,18 +75,21 @@ while ($row = $chartQuery->fetch_assoc()) {
     $chartData[] = $row['count'];
 }
 ?>
-
+<!DOCTYPE html>
 <html lang="en">
  <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Dashboard
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
+  <title>Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+  </style>
  </head>
  <body class="bg-gray-100">
   <div class="flex h-screen">
@@ -94,7 +97,7 @@ while ($row = $chartQuery->fetch_assoc()) {
 <div class="w-64 bg-white shadow-md min-h-screen" x-data="{ userMenu: false, productMenu: false }">
   <div class="p-4">
     <div class="flex items-center space-x-4">
-      <img alt="Logo" class="rounded-full" height="50" src="logo.png" width="50" />
+      <img alt="Logo" class="rounded-full" height="50" src="logo2.png" width="50" />
       <div>
         <h2 class="text-lg font-semibold">SevenDwarfs</h2>
       </div>
@@ -121,7 +124,7 @@ while ($row = $chartQuery->fetch_assoc()) {
       </li>
 
       <!-- User Management -->
-<li class="px-4 py-2 hover:bg-gray-200 cursor-pointer" @click="userMenu = !userMenu">
+<li class="px-4 py-2 rounded-md hover:bg-pink-100 hover:text-pink-600 transition-all duration-200 cursor-pointer" @click="userMenu = !userMenu">
   <div class="flex items-center justify-between">
     <div class="flex items-center space-x-2">
       <i class="fas fa-users-cog"></i>
@@ -130,7 +133,7 @@ while ($row = $chartQuery->fetch_assoc()) {
     <i class="fas fa-chevron-down" :class="{ 'rotate-180': userMenu }"></i>
   </div>
 </li>
-<ul x-show="userMenu" x-transition class="pl-8 text-sm text-gray-700 space-y-1">
+<ul x-show="userMenu" x-transition.duration.300ms class="pl-8 text-sm text-gray-700 space-y-1 overflow-hidden">
   <li class="py-1">
     <a href="users.php" class="flex items-center space-x-2 hover:text-pink-600">
       <i class="fas fa-user"></i>
@@ -188,7 +191,6 @@ while ($row = $chartQuery->fetch_assoc()) {
   </li>
 </ul>
 
-
       <!-- Other Links -->
       <li class="px-4 py-2 hover:bg-gray-200">
         <a href="orders.php" class="flex items-center space-x-2">
@@ -224,7 +226,7 @@ while ($row = $chartQuery->fetch_assoc()) {
    <div class="flex-1 flex flex-col">
     <!-- Header -->
      
-    <header class="bg-pink-500 p-4 flex items-center justify-between">
+<header class="bg-pink-300 p-4 flex items-center justify-between shadow-md rounded-bl-2xl">
      <div class="flex items-center space-x-4">
       <button class="text-white text-2xl">
       <h1 class="text-xl font-bold">Dashboard</h1>
@@ -244,7 +246,7 @@ while ($row = $chartQuery->fetch_assoc()) {
   </button>
 
   <!-- Dropdown -->
-  <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50">
+<div id="notifDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg z-50 transition-all">
     <ul class="divide-y divide-gray-200">
       <?php if ($newOrdersNotif > 0): ?>
       <li class="px-4 py-2 hover:bg-gray-100 text-sm">🛒 <?= $newOrdersNotif ?> new order(s)</li>
@@ -261,64 +263,70 @@ while ($row = $chartQuery->fetch_assoc()) {
 
      </div>
     </header>
-    <!-- Dashboard Content -->
-    
-    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="bg-purple-500 text-white p-4 rounded-md text-center">
-        <h2 class="text-lg font-semibold">New Orders</h2>
-        <p class="text-2xl"><?= $newOrders ?></p>
-    </div>
-    <div class="bg-green-500 text-white p-4 rounded-md text-center">
-        <h2 class="text-lg font-semibold">Sales</h2>
-        <p class="text-2xl"><?= $totalSales ?></p>
-    </div>
-    <div class="bg-yellow-500 text-white p-4 rounded-md text-center">
-        <h2 class="text-lg font-semibold">Revenue</h2>
-        <p class="text-2xl">₱<?= number_format($totalRevenue, 2) ?></p>
-    </div>
+   <!-- Dashboard Content -->
+<div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+
+  <div class="bg-purple-500 hover:bg-purple-600 transition duration-300 text-white p-6 rounded-xl shadow-lg text-center transform hover:scale-105">
+    <h2 class="text-lg font-semibold">New Orders</h2>
+    <p class="text-3xl font-bold mt-2"><?= $newOrders ?></p>
+  </div>
+
+  <div class="bg-green-500 hover:bg-green-600 transition duration-300 text-white p-6 rounded-xl shadow-lg text-center transform hover:scale-105">
+    <h2 class="text-lg font-semibold">Sales</h2>
+    <p class="text-3xl font-bold mt-2"><?= $totalSales ?></p>
+  </div>
+
+  <div class="bg-yellow-500 hover:bg-yellow-600 transition duration-300 text-white p-6 rounded-xl shadow-lg text-center transform hover:scale-105">
+    <h2 class="text-lg font-semibold">Revenue</h2>
+    <p class="text-3xl font-bold mt-2">₱<?= number_format($totalRevenue, 2) ?></p>
+  </div>
+
 </div>
 
 <!-- Filter -->
 <div class="mt-6">
-    <form method="GET" class="mb-4">
-    <select name="filter" class="border p-2 rounded">
-    <option value="today" <?= $_GET['filter'] === 'today' ? 'selected' : '' ?>>Today</option>
-    <option value="month" <?= $_GET['filter'] === 'month' ? 'selected' : '' ?>>This Month</option>
-</select>
-        <button type="submit" class="ml-2 bg-pink-500 text-white px-4 py-2 rounded">Filter</button>
-    </form>
+  <form method="GET" class="flex flex-wrap gap-2 items-center mb-4">
+    <select name="filter" class="border p-2 rounded-md shadow-sm focus:ring-pink-400 focus:outline-none">
+      <option value="today" <?= $_GET['filter'] === 'today' ? 'selected' : '' ?>>Today</option>
+      <option value="month" <?= $_GET['filter'] === 'month' ? 'selected' : '' ?>>This Month</option>
+    </select>
+    <button type="submit" class="bg-pink-300 text-white px-4 py-2 rounded-md hover:bg-pink-500 transition">Filter</button>
+  </form>
 </div>
+
 
 <!-- Recent Orders -->
 <div class="bg-white p-4 rounded-md shadow-md">
     <h2 class="text-lg font-semibold mb-4">Recent Orders</h2>
-    <table class="w-full table-auto">
-        <thead>
-            <tr>
-                <th class="text-left">Order ID</th>
-                <th class="text-left">Customer</th>
-                <th class="text-left">Amount</th>
-                <th class="text-left">Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while($row = $recentOrders->fetch_assoc()): ?>
-                <tr>
-                    <td><?= $row['order_id'] ?></td>
-                    <td><?= $row['customer_name'] ?></td>
-                    <td>₱<?= number_format($row['total_amount'], 2) ?></td>
-                    <td><?= $row['created_at'] ?></td>
-                </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
+    <table class="w-full table-auto border-collapse text-sm">
+  <thead class="bg-gray-200">
+    <tr>
+      <th class="text-left px-4 py-2">Order ID</th>
+      <th class="text-left px-4 py-2">Customer</th>
+      <th class="text-left px-4 py-2">Amount</th>
+      <th class="text-left px-4 py-2">Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php while($row = $recentOrders->fetch_assoc()): ?>
+    <tr class="hover:bg-gray-50 border-b">
+      <td class="px-4 py-2"><?= $row['order_id'] ?></td>
+      <td class="px-4 py-2"><?= $row['customer_name'] ?></td>
+      <td class="px-4 py-2">₱<?= number_format($row['total_amount'], 2) ?></td>
+      <td class="px-4 py-2"><?= $row['created_at'] ?></td>
+    </tr>
+    <?php endwhile; ?>
+  </tbody>
+</table>
+
 </div>
 
 <!-- Chart.js -->
-<div class="mt-6 bg-white p-4 rounded-md shadow-md">
-    <h2 class="text-lg font-semibold mb-2">Order Trends (Last 7 Days)</h2>
-    <canvas id="ordersChart"></canvas>
+<div class="mt-6 bg-white p-6 rounded-xl shadow-lg">
+  <h2 class="text-lg font-semibold mb-4">Order Trends (Last 7 Days)</h2>
+  <canvas id="ordersChart"></canvas>
 </div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>

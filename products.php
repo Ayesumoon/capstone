@@ -96,19 +96,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['category_name'], $_PO
 
 $conn->close();
 ?>
-
+<!DOCTYPE html>
 <html lang="en">
  <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Products
-  </title>
-  <script src="https://cdn.tailwindcss.com">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+          },
+          colors: {
+            primary: '#ec4899', // pink-500
+          }
+        }
+      }
+    };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
- </head>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 font-poppins text-sm transition-all duration-300">
+
  <body class="bg-gray-100">
   <div class="flex h-screen">
    <!-- Sidebar -->
@@ -116,7 +130,7 @@ $conn->close();
   <div class="p-4">
     <!-- Logo & Brand -->
     <div class="flex items-center space-x-4">
-      <img src="logo.png" alt="Logo" class="rounded-full w-12 h-12" />
+      <img src="logo2.png" alt="Logo" class="rounded-full w-12 h-12" />
       <h2 class="text-lg font-semibold">SevenDwarfs</h2>
     </div>
 
@@ -202,144 +216,81 @@ $conn->close();
     </ul>
   </nav>
 </div>
-
-    <!-- Main Content -->
-    <div class="flex-1 p-6">
-      <div class="bg-pink-600 text-white p-4 rounded-t">
-        <h1 class="text-xl font-bold">Products</h1>
-      </div>
-      <div class="bg-white p-6 rounded-b shadow-md space-y-6">
-      <div class="filters flex items-center gap-4">
-  <!-- Category Dropdown -->
-  <form method="GET" action="products.php" id="categoryForm" class="flex items-center">
-    <label class="border rounded-md p-2 flex items-center gap-2">Category: 
-      <select name="category" onchange="document.getElementById('categoryForm').submit()" class="p-1 border rounded">
-        <option value="all">All</option>
-        <?php foreach ($categories as $category) { ?>
-          <option value="<?php echo $category['category_id']; ?>" 
-            <?php echo ($selectedCategory == $category['category_id']) ? 'selected' : ''; ?>>
-            <?php echo $category['category_name']; ?>
-          </option>
-        <?php } ?>
-      </select>
-    </label>
-  </form>
-
-  <!-- Add Category Button -->
-<div class="mb-4">
-  <button onclick="openCategoryModal()" type="button"
-    class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">
-    <i class="fas fa-plus mr-1"></i>Add Category
-  </button>
-</div>
-
-<!-- Modal Background + Form -->
-<div id="categoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-  <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
-    <h2 class="text-lg font-semibold mb-4">Add New Category</h2>
-    <form method="POST">
-      <div class="mb-4">
-        <label class="block text-gray-700 font-medium mb-1">Category Name:</label>
-        <input type="text" name="category_name" required
-          class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-pink-400">
-      </div>
-      <div class="mb-4">
-        <label class="block text-gray-700 font-medium mb-1">Category Code:</label>
-        <input type="text" name="category_code" required placeholder="e.g. 010"
-          class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-pink-400">
-      </div>
-      <div class="flex justify-end gap-2">
-        <button type="submit"
-          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
-        <button type="button" onclick="closeCategoryModal()"
-          class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-      </div>
-    </form>
+<!-- Main Content -->
+<div class="flex-1 p-6 space-y-6 transition-all duration-300 font-poppins">
+  <!-- Header -->
+  <div class="bg-pink-300 text-white p-4 rounded-t-2xl shadow-sm">
+    <h1 class="text-2xl font-semibold">Products</h1>
   </div>
-</div>
 
-<!-- Modal JS -->
-<script>
-  function openCategoryModal() {
-    document.getElementById('categoryModal').classList.remove('hidden');
-  }
+  <!-- Filters & Controls -->
+  <div class="bg-white p-6 rounded-b-2xl shadow-md space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <!-- Category Dropdown -->
+      <form method="GET" action="products.php" id="categoryForm" class="flex items-center space-x-2">
+        <label class="text-gray-700 font-medium">Category:</label>
+        <select name="category" onchange="document.getElementById('categoryForm').submit()" class="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition">
+          <option value="all">All</option>
+          <?php foreach ($categories as $category) { ?>
+            <option value="<?= $category['category_id']; ?>" <?= ($selectedCategory == $category['category_id']) ? 'selected' : ''; ?>>
+              <?= htmlspecialchars($category['category_name']); ?>
+            </option>
+          <?php } ?>
+        </select>
+      </form>
+    </div>
 
-  function closeCategoryModal() {
-    document.getElementById('categoryModal').classList.add('hidden');
-  }
-
-  // Optional: close modal when clicking outside of it
-  window.addEventListener('click', function (e) {
-    const modal = document.getElementById('categoryModal');
-    if (e.target === modal) {
-      closeCategoryModal();
-    }
-  });
-</script>
-
-
-
-  <!-- Conditionally Show Add Product Button -->
-  <?php if ($selectedCategory !== 'all') { ?>
-    <a href="add_product.php?category_id=<?php echo $selectedCategory; ?>">
-      <button class="bg-pink-600 text-white px-4 py-2 rounded shadow hover:bg-pink-700">
-        <i class="fas fa-plus mr-2"></i>Add Product
-      </button>
-    </a>
-  <?php } ?>
-</div>
-
-        </div>
-        
-<div class="overflow-x-auto">
-  <table class="min-w-full bg-white border border-gray-200 shadow rounded-lg">
-    <thead class="bg-gray-100 text-gray-700">
-      <tr>
-      <th class="px-4 py-3 border">Product Image</th>
-        <th class="px-4 py-3 border">Product Code</th>
-        <th class="px-4 py-3 border">Description</th>
-        <th class="px-4 py-3 border">Product ID</th>
-        <th class="px-4 py-3 border">Price</th>
-        <th class="px-4 py-3 border">Supplier Price</th>
-        <th class="px-4 py-3 border">Revenue</th>
-        <th class="px-4 py-3 border">Category</th>
-        <th class="px-4 py-3 border">Actions</th>
-      </tr>
-    </thead>
-    <tbody class="text-gray-700">
-      <?php if (!empty($products)) { 
-        foreach ($products as $product) { ?>
-          <tr class="hover:bg-gray-50">
-            <td class="px-4 py-3 border text-center">
-              <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="Product Image" class="w-12 h-12 object-cover rounded">
-            </td>
-            <td class="px-4 py-3 border"><?php echo htmlspecialchars($product['product_name']); ?></td>
-            <td class="px-4 py-3 border"><?php echo htmlspecialchars($product['description']); ?></td>
-            <td class="px-4 py-3 border"><?php echo $product['product_id']; ?></td>
-            <td class="px-4 py-3 border">₱<?php echo number_format($product['price_id'], 2); ?></td>
-            <td class="px-4 py-3 border">₱<?php echo number_format($product['supplier_price'], 2); ?></td>
-            <td class="px-4 py-3 border">₱<?php echo number_format($product['price_id'] - $product['supplier_price'], 2); ?></td>
-            <td class="px-4 py-3 border"><?php echo htmlspecialchars($product['category_name']); ?></td>
-            <td class="px-4 py-3 border">
-            <div class="flex justify-center mt-4">
-  <div class="flex gap-2">
-    <a href="edit_product.php?id=<?php echo $product['product_id']; ?>" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm">
-      Edit
-    </a>
-    <a href="delete_product.php?id=<?php echo $product['product_id']; ?>" onclick="return confirm('Are you sure you want to delete this product?')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm">
-      Delete
-    </a>
-  </div>
-</div>
-
-            </td>
+    <!-- Product Table -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white border border-gray-200 shadow-md rounded-xl overflow-hidden">
+        <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+          <tr>
+            <th class="px-4 py-3 text-left">Image</th>
+            <th class="px-4 py-3 text-left">Code</th>
+            <th class="px-4 py-3 text-left">Description</th>
+            <th class="px-4 py-3 text-left">Product ID</th>
+            <th class="px-4 py-3 text-left">Price</th>
+            <th class="px-4 py-3 text-left">Category</th>
+            <th class="px-4 py-3 text-left">Actions</th>
           </tr>
-      <?php } 
-      } else { ?>
-        <tr>
-          <td colspan="8" class="text-center px-4 py-6 text-gray-500 border">No products available</td>
-        </tr>
-      <?php } ?>
-    </tbody>
-  </table>
+        </thead>
+        <tbody class="text-gray-700 text-sm">
+          <?php if (!empty($products)) { foreach ($products as $product) { ?>
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-4 py-3">
+                <img src="<?= htmlspecialchars($product['image_url']); ?>" alt="Product" class="w-12 h-12 object-cover rounded-full border shadow-sm" />
+              </td>
+              <td class="px-4 py-3"><?= htmlspecialchars($product['product_name']); ?></td>
+              <td class="px-4 py-3"><?= htmlspecialchars($product['description']); ?></td>
+              <td class="px-4 py-3"><?= $product['product_id']; ?></td>
+              <td class="px-4 py-3">₱<?= number_format($product['price_id'], 2); ?></td>
+              <td class="px-4 py-3"><?= htmlspecialchars($product['category_name']); ?></td>
+              <td class="px-4 py-3">
+                <div class="flex gap-2">
+                  <a href="edit_product.php?id=<?= $product['product_id']; ?>" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg transition text-xs">Edit</a>
+                  <a href="delete_product.php?id=<?= $product['product_id']; ?>" onclick="return confirm('Are you sure you want to delete this product?')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition text-xs">Delete</a>
+                </div>
+              </td>
+            </tr>
+          <?php }} else { ?>
+            <tr>
+              <td colspan="9" class="text-center text-gray-500 py-6">No products available</td>
+            </tr>
+          <?php } ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
+
+<!-- Optional Animation -->
+<style>
+  @keyframes fade-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+</style>

@@ -72,30 +72,79 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn->close();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Google Font: Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+  </style>
 </head>
-<link rel="stylesheet" href="css/login.css">
-<body>
-<img src="logo.png" alt="Seven Dwarfs Logo" class="w-50 h-50"/>
-<div class="maincontent">
-    <h2>Admin Login</h2>
-    <?php if (!empty($error)) echo "<p style='color:red;'>$error</p>"; ?>
-    <form method="post">
-        <label>Email:</label>
-        <input type="email" name="email" required>
-        <br>
-        <label>Password:</label>
-        <input type="password" name="password" required>
-        <br>
-        <br>
-        <input type="submit" value="Login">
+<body class="bg-gradient-to-r from-pink-100 to-pink-200 min-h-screen flex items-center justify-center">
+  <div class="bg-white shadow-xl rounded-2xl p-10 w-full max-w-md transition-transform duration-300 transform hover:scale-105">
+    
+    <!-- Logo -->
+    <div class="flex justify-center mb-6">
+      <img src="logo2.png" alt="Seven Dwarfs Logo" class="h-24 w-auto shadow-md" />
+    </div>
+
+    <h2 class="text-2xl font-bold text-center text-pink-600 mb-4">Admin Login</h2>
+
+    <?php if (!empty($error)) echo "<p class='text-red-500 text-center mb-4'>$error</p>"; ?>
+
+    <form method="post" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Email</label>
+        <input type="email" name="email" required
+               class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <div class="relative">
+          <input type="password" name="password" id="password" required
+                 class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent pr-10" />
+          <button type="button" onclick="togglePassword()"
+                  class="absolute inset-y-0 right-0 px-3 flex items-center text-sm text-gray-500 hover:text-pink-500 focus:outline-none">
+            Show
+          </button>
+        </div>
+      </div>
+
+      <div class="pt-4">
+        <input type="submit" value="Login"
+               class="w-full bg-pink-500 text-white py-2 rounded-md font-semibold hover:bg-pink-600 transition-colors" />
+      </div>
     </form>
 
+    <!-- Sign Up button -->
+    <div class="mt-6 text-center">
+      <p class="text-sm text-gray-600">Don't have an account?</p>
+      <a href="signup.php" class="inline-block mt-2 px-4 py-2 bg-white border border-pink-500 text-pink-600 rounded-md font-semibold hover:bg-pink-50 transition-colors">
+        Sign Up
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById("password");
+      const button = event.currentTarget;
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        button.textContent = "Hide";
+      } else {
+        passwordInput.type = "password";
+        button.textContent = "Show";
+      }
+    }
+  </script>
 </body>
 </html>

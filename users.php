@@ -97,162 +97,194 @@ $conn->close();
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body class="bg-gray-100">
-  <div class="flex h-screen">
+
+<body class="bg-gray-100 font-sans">
+  <div class="flex h-screen overflow-hidden">
     <!-- Sidebar -->
-<div class="w-64 bg-white shadow-md min-h-screen" x-data="{ userMenu: false, productMenu: false }">
-  <!-- Header -->
-  <div class="p-4">
-    <div class="flex items-center space-x-4">
-      <img src="logo.png" alt="Logo" class="rounded-full w-12 h-12" />
-      <h2 class="text-lg font-semibold">SevenDwarfs</h2>
-    </div>
-    <div class="mt-4 flex items-center space-x-4">
-      <img src="newID.jpg" alt="Admin" class="rounded-full w-10 h-10" />
-      <div>
-        <h3 class="text-sm font-semibold"><?php echo htmlspecialchars($admin_name); ?></h3>
-        <p class="text-xs text-gray-500"><?php echo htmlspecialchars($admin_role); ?></p>
+    <div class="w-64 bg-white shadow-lg min-h-screen" x-data="{ userMenu: true, productMenu: false }">
+      <div class="p-4">
+        <div class="flex items-center space-x-4">
+          <img src="logo2.png" alt="Logo" class="rounded-full w-12 h-12" />
+          <h2 class="text-lg font-bold">SevenDwarfs</h2>
+        </div>
+        <div class="mt-4 flex items-center space-x-4">
+          <img src="newID.jpg" alt="Admin" class="rounded-full w-10 h-10" />
+          <div>
+            <h3 class="text-sm font-semibold"><?php echo htmlspecialchars($admin_name); ?></h3>
+            <p class="text-xs text-gray-500"><?php echo htmlspecialchars($admin_role); ?></p>
+          </div>
+        </div>
       </div>
+
+      <nav class="mt-6">
+        <ul>
+          <li class="px-4 py-2 hover:bg-gray-200">
+            <a href="dashboard.php" class="flex items-center">
+              <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+            </a>
+          </li>
+
+          <!-- User Management -->
+          <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer transition" @click="userMenu = !userMenu">
+            <div class="flex items-center justify-between">
+              <span class="flex items-center">
+                <i class="fas fa-users-cog mr-2"></i>User Management
+              </span>
+              <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': userMenu }"></i>
+            </div>
+          </li>
+          <ul x-show="userMenu" x-transition class="pl-8 text-sm text-gray-700 space-y-1 overflow-hidden">
+            <li class="py-1 bg-pink-100 text-pink-600 rounded-md">
+              <a href="users.php" class="flex items-center">
+                <i class="fas fa-user mr-2"></i>User
+              </a>
+            </li>
+            <li class="py-1 hover:text-pink-600">
+              <a href="user_types.php" class="flex items-center">
+                <i class="fas fa-id-badge mr-2"></i>Type
+              </a>
+            </li>
+            <li class="py-1 hover:text-pink-600">
+              <a href="user_status.php" class="flex items-center">
+                <i class="fas fa-toggle-on mr-2"></i>Status
+              </a>
+            </li>
+            <li class="py-1 hover:text-pink-600">
+              <a href="customers.php" class="flex items-center">
+                <i class="fas fa-users mr-2"></i>Customer
+              </a>
+            </li>
+          </ul>
+
+          <!-- Product Management -->
+          <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer transition" @click="productMenu = !productMenu">
+            <div class="flex items-center justify-between">
+              <span class="flex items-center">
+                <i class="fas fa-box-open mr-2"></i>Product Management
+              </span>
+              <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': productMenu }"></i>
+            </div>
+          </li>
+          <ul x-show="productMenu" x-transition class="pl-8 text-sm text-gray-700 space-y-1 overflow-hidden">
+            <li class="py-1 hover:text-pink-600">
+              <a href="categories.php" class="flex items-center">
+                <i class="fas fa-tags mr-2"></i>Category
+              </a>
+            </li>
+            <li class="py-1 hover:text-pink-600">
+              <a href="products.php" class="flex items-center">
+                <i class="fas fa-box mr-2"></i>Product
+              </a>
+            </li>
+            <li class="py-1 hover:text-pink-600">
+              <a href="inventory.php" class="flex items-center">
+                <i class="fas fa-warehouse mr-2"></i>Inventory
+              </a>
+            </li>
+          </ul>
+
+          <!-- Other Pages -->
+          <li class="px-4 py-2 hover:bg-gray-100">
+            <a href="orders.php" class="flex items-center">
+              <i class="fas fa-shopping-cart mr-2"></i>Orders
+            </a>
+          </li>
+          <li class="px-4 py-2 hover:bg-gray-100">
+            <a href="pos.php" class="flex items-center">
+              <i class="fas fa-cash-register mr-2"></i>Point of Sale
+            </a>
+          </li>
+          <li class="px-4 py-2 hover:bg-gray-100">
+            <a href="payandtransac.php" class="flex items-center">
+              <i class="fas fa-money-check-alt mr-2"></i>Payment & Transactions
+            </a>
+          </li>
+          <li class="px-4 py-2 hover:bg-gray-100">
+            <a href="storesettings.php" class="flex items-center">
+              <i class="fas fa-cog mr-2"></i>Store Settings
+            </a>
+          </li>
+          <li class="px-4 py-2 hover:bg-gray-100">
+            <a href="logout.php" class="flex items-center">
+              <i class="fas fa-sign-out-alt mr-2"></i>Log out
+            </a>
+          </li>
+        </ul>
+      </nav>
     </div>
-  </div>
 
-  <!-- Navigation -->
-  <nav class="mt-6">
-    <ul>
-      <!-- Dashboard -->
-      <li class="px-4 py-2 hover:bg-gray-200">
-        <a href="dashboard.php" class="flex items-center">
-          <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-        </a>
-      </li>
-
-      <!-- User Management -->
-      <li class="px-4 py-2 hover:bg-gray-200 cursor-pointer" @click="userMenu = !userMenu">
-        <div class="flex items-center justify-between">
-          <span class="flex items-center">
-            <i class="fas fa-users-cog mr-2"></i>User Management
-          </span>
-          <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': userMenu }"></i>
-        </div>
-      </li>
-      <ul x-show="userMenu" x-transition class="pl-8 text-sm text-gray-700 space-y-1">
-        <li class="py-1 bg-pink-100 text-pink-600 rounded"><a href="users.php" class="flex items-center"><i class="fas fa-user mr-2"></i>User</a></li>
-        <li class="py-1 hover:text-pink-600"><a href="user_types.php" class="flex items-center"><i class="fas fa-id-badge mr-2"></i>Type</a></li>
-        <li class="py-1 hover:text-pink-600"><a href="user_status.php" class="flex items-center"><i class="fas fa-toggle-on mr-2"></i>Status</a></li>
-        <li class="py-1">
-    <a href="customers.php" class="flex items-center space-x-2 hover:text-pink-600">
-      <i class="fas fa-users"></i>
-      <span>Customer</span>
-    </a>
-  </li>
-      </ul>
-
-      <!-- Product Management -->
-      <li class="px-4 py-2 hover:bg-gray-200 cursor-pointer" @click="productMenu = !productMenu">
-        <div class="flex items-center justify-between">
-          <span class="flex items-center">
-            <i class="fas fa-box-open mr-2"></i>Product Management
-          </span>
-          <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': productMenu }"></i>
-        </div>
-      </li>
-      <ul x-show="productMenu" x-transition class="pl-8 text-sm text-gray-700 space-y-1">
-        <li class="py-1 hover:text-pink-600"><a href="categories.php" class="flex items-center"><i class="fas fa-tags mr-2"></i>Category</a></li>
-        <li class="py-1 hover:text-pink-600"><a href="products.php" class="flex items-center"><i class="fas fa-box mr-2"></i>Product</a></li>
-        <li class="py-1 hover:text-pink-600"><a href="inventory.php" class="flex items-center"><i class="fas fa-warehouse mr-2"></i>Inventory</a></li>
-      </ul>
-
-      <!-- Other Pages -->
-      <li class="px-4 py-2 hover:bg-gray-200">
-        <a href="orders.php" class="flex items-center">
-          <i class="fas fa-shopping-cart mr-2"></i>Orders
-        </a>
-      </li>
-      <li class="px-4 py-2 hover:bg-gray-200">
-        <a href="pos.php" class="flex items-center">
-          <i class="fas fa-cash-register mr-2"></i>Point of Sale
-        </a>
-      </li>
-      <li class="px-4 py-2 hover:bg-gray-200">
-        <a href="payandtransac.php" class="flex items-center">
-          <i class="fas fa-money-check-alt mr-2"></i>Payment & Transactions
-        </a>
-      </li>
-      <li class="px-4 py-2 hover:bg-gray-200">
-        <a href="storesettings.php" class="flex items-center">
-          <i class="fas fa-cog mr-2"></i>Store Settings
-        </a>
-      </li>
-      <li class="px-4 py-2 hover:bg-gray-200">
-        <a href="logout.php" class="flex items-center">
-          <i class="fas fa-sign-out-alt mr-2"></i>Log out
-        </a>
-      </li>
-    </ul>
-  </nav>
-</div>
-
-    <!-- Main Content -->
+<!-- Main Content -->
     <div class="flex-1 p-6 overflow-auto">
-      <div class="bg-pink-600 text-white p-4 rounded-t">
-        <h1 class="text-xl font-bold">Users</h1>
+      <div class="bg-pink-300 text-white p-5 rounded-t-xl shadow-md">
+        <h1 class="text-2xl font-bold">Users</h1>
       </div>
 
-      <div class="bg-white p-4 rounded-b shadow-md mb-6">
-        <div class="flex justify-between items-center mb-4">
-          <form method="GET" action="users.php" class="flex items-center gap-2">
+      <div class="bg-white p-6 rounded-b-xl shadow-md">
+        <div class="flex justify-between items-center mb-6">
+          <form method="GET" action="users.php" class="flex items-center space-x-2">
             <label for="status" class="text-sm font-medium">Status:</label>
-            <select name="status" id="status" onchange="this.form.submit()" class="border rounded-md p-2 text-sm">
+            <select name="status" id="status" onchange="this.form.submit()" class="border border-gray-300 rounded-md p-2 text-sm focus:ring-pink-400 focus:outline-none">
               <option value="">All</option>
               <option value="active" <?php echo ($status_filter == "active") ? 'selected' : ''; ?>>Active</option>
               <option value="inactive" <?php echo ($status_filter == "inactive") ? 'selected' : ''; ?>>Inactive</option>
             </select>
           </form>
-          <a href="add_user.php" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 text-sm font-medium">
-            <i class="fas fa-plus mr-1"></i>Add User
+          <a href="add_user.php" class="bg-pink-300 hover:bg-pink-500 text-white px-5 py-2 rounded-md shadow transition text-sm font-medium">
+            <i class="fas fa-plus mr-2"></i>Add User
           </a>
         </div>
 
         <div class="overflow-x-auto">
-          <table class="min-w-full table-auto border border-gray-200 shadow-md text-sm">
-            <thead class="bg-gray-100 text-left text-gray-600">
+          <table class="min-w-full table-auto border border-gray-200 shadow text-sm rounded-lg overflow-hidden">
+            <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
               <tr>
-                <th class="px-4 py-3 border">User ID</th>
-                <th class="px-4 py-3 border">Username</th>
-                <th class="px-4 py-3 border">Full Name</th>
-                <th class="px-4 py-3 border">Email</th>
-                <th class="px-4 py-3 border">Role</th>
-                <th class="px-4 py-3 border">Status</th>
-                <th class="px-4 py-3 border">Last Login</th>
-                <th class="px-4 py-3 border">Last Logout</th>
-                <th class="px-4 py-3 border">Actions</th>
+                <th class="px-4 py-3">User ID</th>
+                <th class="px-4 py-3">Username</th>
+                <th class="px-4 py-3">Full Name</th>
+                <th class="px-4 py-3">Email</th>
+                <th class="px-4 py-3">Role</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Last Login</th>
+                <th class="px-4 py-3">Last Logout</th>
+                <th class="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody class="text-gray-700">
-              <?php if (!empty($users)) { 
+              <?php if (!empty($users)) {
                 foreach ($users as $user) { ?>
-                <tr class="hover:bg-gray-50">
-                
-                  <td class="px-4 py-2 border"><?php echo $user['admin_id']; ?></td>
-                  <td class="px-4 py-2 border"><?php echo htmlspecialchars($user['username']); ?></td>
-                  <td class="px-4 py-2 border"><?php echo htmlspecialchars($user['full_name']); ?></td>
-                  <td class="px-4 py-2 border"><?php echo htmlspecialchars($user['admin_email']); ?></td>
-                  <td class="px-4 py-2 border"><?php echo htmlspecialchars($user['role_name']); ?></td>
-                  <td class="px-4 py-2 border font-semibold <?php echo strtolower($user['status']) === 'active' ? 'text-green-600' : 'text-red-600'; ?>">
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="px-4 py-2"><?php echo $user['admin_id']; ?></td>
+                  <td class="px-4 py-2"><?php echo htmlspecialchars($user['username']); ?></td>
+                  <td class="px-4 py-2"><?php echo htmlspecialchars($user['full_name']); ?></td>
+                  <td class="px-4 py-2"><?php echo htmlspecialchars($user['admin_email']); ?></td>
+                  <td class="px-4 py-2"><?php echo htmlspecialchars($user['role_name']); ?></td>
+                  <td class="px-4 py-2 font-semibold <?php echo strtolower($user['status']) === 'active' ? 'text-green-600' : 'text-red-600'; ?>">
                     <?php echo ucfirst($user['status']); ?>
                   </td>
-                  <td class="px-4 py-2 border"><?php echo $user['last_logged_in']; ?></td>
-                  <td class="px-4 py-2 border"><?php echo $user['last_logged_out']; ?></td>
-                  <td class="px-4 py-2 border">
+                  <td class="px-4 py-2"><?php echo $user['last_logged_in']; ?></td>
+                  <td class="px-4 py-2"><?php echo $user['last_logged_out']; ?></td>
+                  <td class="px-4 py-2">
                     <a href="edit_user.php?id=<?php echo $user['admin_id']; ?>" class="text-blue-500 hover:underline">Edit</a> |
-                    <a href="delete_user.php?id=<?php echo $user['admin_id']; ?>" onclick="return confirm('Are you sure you want to delete this user?')" class="text-red-500 hover:underline">Delete</a>
+                    <a href="delete_user.php?id=<?php echo $user['admin_id']; ?>" onclick="return confirm('Are you sure?')" class="text-red-500 hover:underline">Delete</a>
                   </td>
                 </tr>
-              <?php } 
+              <?php }
               } else { ?>
                 <tr>
-                  <td colspan="10" class="text-center px-4 py-4 text-gray-500 border">No users found</td>
+                  <td colspan="9" class="text-center px-4 py-6 text-gray-500">No users found</td>
                 </tr>
               <?php } ?>
             </tbody>
